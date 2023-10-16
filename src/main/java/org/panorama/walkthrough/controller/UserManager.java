@@ -69,4 +69,7 @@ public class UserManager {
         return "u-project-create";
     }
 
+    @RequestMapping("/smoothTransition")
+    public String uCreateSmoothTransitionProject() { return "u-project-smoothTransition"; }
+
 }

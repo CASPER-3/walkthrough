@@ -252,9 +252,20 @@ const UploadSceneContent = () => {
         //
         // })
 
+
+
+
         console.log(file, "fileInfo");
         const fileCopy = new File([file], file.name, {type: [file.type]});
         const picId = nanoid(genIdLength);
+        const formData = new FormData();
+        formData.append('file', file)
+        fetch("/uploadPic/" + userId + "/" + projectId + "/" + picId+"_erp", {
+            method: 'POST',
+            body: formData,
+        }).then((res)=>{
+            console.log(res)
+        })
         setActionUrl("/uploadPic/" + userId + "/" + projectId + "/" + picId);
         fileMap.set(file.uid, {
             id: picId,

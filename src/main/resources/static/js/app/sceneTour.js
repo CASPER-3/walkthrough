@@ -11,6 +11,7 @@ import {getSkyboxArr, getNaviCircleArr, getModelArr, genObjectMap} from "/js/app
 import {sceneConstructor} from "/js/app/sceneConstructor.js"
 import {GUI} from '/js/lib/dat.gui.module.js';
 
+
 const configurationFileId = sessionStorage.getItem("configurationFileId");
 const userId = sessionStorage.getItem("userId");
 const projectConfigurationUrl = "/project/getEditSources/" + userId + "/" + configurationFileId + "/" + "projectConfig.json";
@@ -43,7 +44,7 @@ let end = null;
 let geometryLine;
 let materialLine = null;
 const lineGroup = new THREE.Group();
-let scaling = 5;
+let scaling = 8;
 let dm_units = "cm";
 
 /**
@@ -623,6 +624,9 @@ function onNaviClick(event) {
 
     if (nextPano === currentPano) return;
 
+    // smoothTransition(currentPano);
+    // return;
+
     let panoFlag;
     let startPosition = camera.position.clone();
     startPosition.y = nextPano.y;
@@ -648,7 +652,7 @@ function onNaviClick(event) {
     });
     let scale_begin = {x: 3.3, y: 4.9, z: 3.3};
     let scale_end = {x: 2.2, y: 2.2, z: 2.2};
-    const tweenB = new TWEEN.Tween(scale_begin).to(scale_end, 800).easing(TWEEN.Easing.Linear.None).onUpdate(function () {
+    const tweenB = new TWEEN.Tween(scale_begin).to(scale_end, 5000).easing(TWEEN.Easing.Linear.None).onUpdate(function () {
         if (panoFlag === 0) {
             //panorama_1.scale.set(scale_begin.x,scale_begin.y,scale_begin.z);
             panorama_1.scale.set(3.3, 4.9, 3.3);
@@ -709,6 +713,12 @@ function eul2rotm(title, roll, pan) {
 
 function onScaleCalibration() {
 
+
+    currentPano.visible = true;
+
+    orbitControls.enabled = true;
+    firstPerson.enabled = false;
+
     layui.use(['jquery', 'layer', 'form'], () => {
 
         const $ = layui.$;
@@ -735,5 +745,31 @@ function onScaleCalibration() {
         })
     })
 
+
+}
+
+/**
+ * 平滑过渡算法测试
+ */
+function smoothTransition(currentSkybox){
+
+    console.log(currentSkybox,"smoothTransition");
+    let boundingSphereRadius = currentSkybox.geometry.boundingSphere.radius;
+    let scaleNum = currentSkybox.scale.x;
+    console.log(boundingSphereRadius,"radius");
+    let sphereGeometry = new THREE.SphereGeometry(boundingSphereRadius,64,32);
+    sphereGeometry.scale(-1,1,1);
+    let sphereMaterial = new THREE.MeshBasicMaterial({
+        map:new THREE.TextureLoader().load("/user_source/newTest/1.jpg"),
+        transparent:false
+    });
+    let boundingSphere = new THREE.Mesh(sphereGeometry,sphereMaterial);
+    boundingSphere.scale.set(scaleNum,scaleNum,scaleNum);
+    boundingSphere.position.copy(currentSkybox.position);
+    boundingSphere.rotation.y = Math.PI;
+
+
+    scene.add(boundingSphere);
+    currentSkybox.visible = false;
 
 }
