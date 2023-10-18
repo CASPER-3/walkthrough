@@ -3,9 +3,9 @@ package org.panorama.walkthrough.controller;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import com.alibaba.fastjson2.function.impl.ToLong;
 import org.panorama.walkthrough.model.Project;
 import org.panorama.walkthrough.repositories.ProjectRepository;
+import org.panorama.walkthrough.service.algorithm.DepthEstimateService;
 import org.panorama.walkthrough.service.project.ProjectService;
 import org.panorama.walkthrough.service.storage.StorageService;
 import org.slf4j.Logger;
@@ -14,9 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.IOException;
 import java.sql.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,10 +39,13 @@ public class UploadResourcesController {
 
     private final StorageService storageService;
 
+    private final DepthEstimateService depthEstimateService;
+
     @Autowired
-    public UploadResourcesController(StorageService service, ProjectRepository projectRepository) {
+    public UploadResourcesController(StorageService service, ProjectRepository projectRepository, DepthEstimateService depthEstimateServ) {
         this.storageService = service;
         this.projectRepository = projectRepository;
+        this.depthEstimateService = depthEstimateServ;
     }
 
     /**
@@ -65,6 +66,29 @@ public class UploadResourcesController {
         statusInfo.put("msg", "upload success");
         String prefix = userId + "/" + projectId + "/";
         storageService.store(file, prefix, picId);
+
+        /**
+         *  判断是否为ERP全景图，是的话调用生成深度图服务
+         *  Wed,Oct18,2023
+         */
+
+        String erpSuffix = picId.substring(picId.length() - 3);
+
+        if (erpSuffix.equals("erp")) {
+            String suffix = fileName.substring(fileName.lastIndexOf('.'));
+            String imageName = picId + suffix;
+
+            try {
+
+                depthEstimateService.depthEstimate(prefix, imageName);
+
+            } catch (Exception ex) {
+
+                System.out.println(ex.getMessage());
+
+            }
+
+        }
 
         return JSON.toJSONString(statusInfo);
     }
@@ -322,6 +346,7 @@ public class UploadResourcesController {
             System.out.println(ex.getMessage());
 
         }
+
         return "upload configFile success";
     }
 
