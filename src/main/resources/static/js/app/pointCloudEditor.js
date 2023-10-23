@@ -1,3 +1,12 @@
+/**
+ * @author WangZx
+ * @version 1.0
+ * @className pointCloudEditor.js
+ * @date Fri,Oct20,2023
+ * @createTime 14:55
+ * @Description
+ */
+
 import * as THREE from "/js/build/three.module.js";
 
 import {OrbitControls} from "/js/lib/controls/OrbitControls.js";
@@ -80,6 +89,8 @@ function init() {
 
     initControls();
     initLightAndHelper();
+
+    plyLoaderTest();
 
     // 这个事件绑定到 renderer.domElement 而不能绑定到全局的window上，否则在点击右侧菜单操作时也会误触发事件，导致场景中选中物体发生变化.
     renderer.domElement.addEventListener('pointerdown', onObjectSelection);
