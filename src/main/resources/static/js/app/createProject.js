@@ -4,7 +4,7 @@
 
 import {genCubeMap} from '/js/app/generateTextures.js'
 import {nanoid} from "/js/build/nanoid.js";
-import {generateProjectConfig, addSkyboxTexture, addSkybox, addModel} from "/js/app/sceneExporter.js";
+import {generateProjectConfig, addSkyboxTexture, addSkybox, addModel, addPointCloud} from "/js/app/sceneExporter.js";
 
 
 const genIdLength = 17;
@@ -164,6 +164,7 @@ const UploadSceneContent = () => {
             const {id, sceneName, fileType} = fileMap.get(picKey);
             addSkyboxTexture(id, sceneName, fileType, projectConfig);
             addSkybox(nanoid(genIdLength), id, sceneName, projectConfig);
+            addPointCloud(nanoid(genIdLength), id, id + '.erp.ply', projectConfig);
         })
             .catch((info) => {
                 console.log('validate Failed:', info);
@@ -253,17 +254,15 @@ const UploadSceneContent = () => {
         // })
 
 
-
-
         console.log(file, "fileInfo");
         const fileCopy = new File([file], file.name, {type: [file.type]});
         const picId = nanoid(genIdLength);
         const formData = new FormData();
         formData.append('file', file)
-        fetch("/uploadPic/" + userId + "/" + projectId + "/" + picId+"_erp", {
+        fetch("/uploadPic/" + userId + "/" + projectId + "/" + picId + ".erp", {
             method: 'POST',
             body: formData,
-        }).then((res)=>{
+        }).then((res) => {
             console.log(res)
         })
         setActionUrl("/uploadPic/" + userId + "/" + projectId + "/" + picId);

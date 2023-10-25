@@ -41,7 +41,12 @@ export function generateProjectConfig(projectId, userId) {
             navi: [],
             model: []
         },
-        textures: []
+        textures: [],
+        /**
+         * Modified in Wed,Oct25,2023
+         * Add configuration information related to the point cloud
+         */
+        pointclouds: []
 
     };
 }
@@ -117,6 +122,32 @@ export function addModel(modelId, modelName, projectConfig) {
         }
     )
 }
+
+/**
+ * 创建新项目时为项目配置文件 'projectConfig' 的 'scene.skybox' 项添加一个新的点云项.
+ * @param pointCloudId
+ * @param textureId
+ * @param pointCloudName
+ * @param projectConfig
+ * Wed,Oct25,2023
+ */
+export function addPointCloud(pointCloudId, textureId, pointCloudName, projectConfig) {
+
+    const {userId, id} = projectConfig.metadata;
+
+    projectConfig.pointclouds.push({
+        id: pointCloudId,
+        name: pointCloudName,
+        textureId: textureId,
+        url: PREFIX + userId + "/" + id + "/" + pointCloudName,
+        rotation: {x: 0, y: 0, z: 0},
+        position: {x: 0, y: 0, z: 0},
+        scale: {x: 1, y: 1, z: 1},
+
+    });
+
+}
+
 
 /**
  * 全景漫游可视化编辑页面 '保存场景信息' 的入口方法，读取配置文件更新后写回.
