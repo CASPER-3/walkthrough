@@ -100,6 +100,16 @@ export function getModelArr(scene) {
 }
 
 /**
+ * 获取three.js场景 'scene' 下点云对象数组.
+ * Wed,Nov1,2023
+ * @param scene
+ * @returns {Array:Object3D}
+ */
+export function getPointCloudArr(scene){
+    return getObjectArr(scene,"pointCloudGroup")
+}
+
+/**
  * 根据three.js场景 'scene' 中 'Object3D' 对象所属父Group元素的name属性返回 'Object3D' 对象数组.
  * @param scene
  * @param groupName "panoGroup" | "naviGroup" | "mtlModel"

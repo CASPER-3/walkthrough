@@ -12,12 +12,15 @@ import * as THREE from "/js/build/three.module.js";
 import {OrbitControls} from "/js/lib/controls/OrbitControls.js";
 import {FirstPersonCameraControl} from "/js/lib/controls/firstPersonCameraControl.js";
 import {TransformControls} from "/js/lib/controls/TransformControls.js"
+
 import {GLTFLoader} from "/js/lib/loaders/GLTFLoader.js";
+
 import {PLYLoader} from "/js/lib/loaders/PLYLoader.js";
+import {PLYExporter} from "/js/lib/exporters/PLYExporter.js";
 
 import {getAllChildren, rad2deg} from "/js/app/util.js"
-import {sceneConstructor, getTexturesFromAtlasFile} from "/js/app/sceneConstructor.js";
-import {updateSceneConfig} from "/js/app/sceneExporter.js";
+import {pointCloudConstructor} from "/js/app/pointCloudConstructor.js"
+import {updatePointCloudConfig} from "/js/app/pointCloudExporter.js";
 
 import {genCubeMap} from '/js/app/generateTextures.js'
 import {nanoid} from "/js/build/nanoid.js";
@@ -83,14 +86,14 @@ function init() {
     entityGroup.name = "sceneEntity";
     entityGroup.isTourMode = false;
 
-    sceneConstructor(scene, entityGroup, projectConfigurationUrl);
+    pointCloudConstructor(scene, entityGroup, projectConfigurationUrl);
     console.log(scene, "scene");
     console.log(entityGroup, "entity")
 
     initControls();
     initLightAndHelper();
 
-    plyLoaderTest();
+    //plyLoaderTest();
 
     // 这个事件绑定到 renderer.domElement 而不能绑定到全局的window上，否则在点击右侧菜单操作时也会误触发事件，导致场景中选中物体发生变化.
     renderer.domElement.addEventListener('pointerdown', onObjectSelection);
@@ -144,11 +147,6 @@ function initControls() {
     orbitControls.enabled = true;
     camera.position.set(0, 0, 2);
 
-    firstPerson = new FirstPersonCameraControl(camera, renderer.domElement);
-    firstPerson.enabled = false;
-    firstPerson.applyGravity = false;
-    firstPerson.applyCollision = false;
-
     transformControl = new TransformControls(camera, renderer.domElement);
     transformControl.rotationSnap = 0.5 * Math.PI;
     transformControl.addEventListener('change', () => {
@@ -195,9 +193,8 @@ function plyLoaderTest() {
     const plyPath = "/src/main/resources/static/user_source/newTest/basketball_player_vox11_00000001.ply";
     loader.load("../../user_source/newTest/sixFloor2.0.jpg.ply", (geometry) => {
 
-        const material = new THREE.PointsMaterial( { size: 0.01, vertexColors: true } );
-        const object = new THREE.Points( geometry, material );
-
+        const material = new THREE.PointsMaterial({size: 0.01, vertexColors: true});
+        const object = new THREE.Points(geometry, material);
 
 
         // mesh.position.y = -0.2;
@@ -298,12 +295,9 @@ function updateInfoPanel() {
 }
 
 function getCurrentSelectedObjectName() {
-    if (currentSelected.parent.name === "naviGroup") {
-        return "导航热点-" + currentSelected.name;
-    } else if (currentSelected.parent.name === "panoGroup") {
+
+    if (currentSelected.parent.name === "pointCloudGroup") {
         return "场景-" + currentSelected.name;
-    } else if (currentSelected.parent.name === "mtlModel") {
-        return "模型-" + currentSelected.name;
     }
 }
 
@@ -350,6 +344,18 @@ function changeObjectScale(value) {
         updateInfoPanel();
     }
 
+}
+
+function changeObjectRotation(mode, value) {
+    if (currentSelected !== null) {
+        if (mode === 'X') {
+            currentSelected.rotateX(THREE.MathUtils.degToRad(value));
+        } else if (mode === 'Y') {
+            currentSelected.rotateY(THREE.MathUtils.degToRad(value));
+        } else if (mode === 'Z') {
+            currentSelected.rotateZ(THREE.MathUtils.degToRad(value));
+        }
+    }
 }
 
 function onPrevButtonClick() {
@@ -426,6 +432,38 @@ function selectNextObject() {
         currentSelectedIndex += 1;
 
     updateObjectByIndex(currentSelectedIndex);
+}
+
+function save(blob, filename) {
+
+    const link = document.createElement('a');
+    link.style.display = 'none';
+    document.body.appendChild(link); // Firefox workaround, see #6594
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+    // URL.revokeObjectURL( url ); breaks Firefox...
+
+}
+
+//
+function saveArrayBuffer(buffer, filename) {
+
+    save(new Blob([buffer], {type: 'application/octet-stream'}), filename);
+
+}
+
+// 将调整点位对齐后的多个点云导出为.ply文件
+function exportPointClouds() {
+
+    // Instantiate an exporter
+    const exporter = new PLYExporter();
+
+    // Parse the input and generate the ply output
+    const data = exporter.parse(entityGroup.children[0]);
+    saveArrayBuffer(data,"fusion.ply")
+
+
 }
 
 /**
@@ -776,13 +814,37 @@ layui.use('slider', function () {
         elem: '#slideTest5'
     })
     slider.render({
-        elem: '#slideTest6'
+        elem: '#slideRotationX',
+        setTips: (value) => {
+            return value;
+        },
+        min: 0,
+        max: 360,
+        change: (value) => {
+            changeObjectRotation('X', value);
+        }
     })
     slider.render({
-        elem: '#slideTest7'
+        elem: '#slideRotationY',
+        setTips: (value) => {
+            return value;
+        },
+        min: 0,
+        max: 360,
+        change: (value) => {
+            changeObjectRotation('Y', value);
+        }
     })
     slider.render({
-        elem: '#slideTest8'
+        elem: '#slideRotationZ',
+        setTips: (value) => {
+            return value;
+        },
+        min: 0,
+        max: 360,
+        change: (value) => {
+            changeObjectRotation('Z', value);
+        }
     })
     scaleSlider = slider.render({
         elem: "#slideScale",
@@ -886,7 +948,7 @@ layui.use(['dropdown', 'jquery', 'layer'], () => {
                 icon: 1
             })
         } else if (options.id === 9) {
-            // 保存全景漫游
+            // 保存
             // layer.open({
             //     title: '保存全景行走漫游',
             //     type: 1,
@@ -895,12 +957,13 @@ layui.use(['dropdown', 'jquery', 'layer'], () => {
             //     icon: 1
             //
             // });
-            updateSceneConfig(scene, projectConfigurationUrl);
-            antd.message.success("项目保存成功！")
+
+            updatePointCloudConfig(scene, projectConfigurationUrl);
+            antd.message.success("点云点位保存成功！")
         } else if (options.id === 10) {
-            // 清除场景
-            scene.clear();
-            console.log(scene, "after clear");
+            // 生成VR
+            exportPointClouds();
+
         } else if (options.id === 11) {
             // 打印选中物体信息(DEBUG)
             console.log(currentSelected);
@@ -921,33 +984,6 @@ layui.use(['dropdown', 'jquery', 'layer'], () => {
             // exportJsonTree(scene);
 
         } else if (options.id === 13) {
-            // 从gltf导入场景
-            recoverSceneFromJson(scene);
-            const loader = new GLTFLoader().setPath('./user_source/newTest/');
-            loader.load('scene.gltf', (gltf) => {
-
-                scene.add(gltf.scene);
-                renderer.outputEncoding = THREE.sRGBEncoding;
-                console.log(scene);
-                scene.traverse((object) => {
-                    if (object.isMesh) {
-
-                        const material = object.material;
-                        if (material.map) material.map.encoding = THREE.sRGBEncoding;
-                        if (material.emissiveMap) material.emissiveMap.encoding = THREE.sRGBEncoding;
-                        if (material.sheenColorMap) material.sheenColorMap.encoding = THREE.sRGBEncoding;
-                        if (material.specularColorMap) material.specularColorMap.encoding = THREE.sRGBEncoding;
-                    }
-                });
-
-            })
-        } else if (options.id === 14) {
-            // step2json
-            // saveGeometricTransformation2Json("scale",[-4,4,4]);
-            // showInfo(scene);
-            recoverSceneFromJson(scene);
-            sceneConstructor(scene, '/user_source/newTest/sceneConfig.json', renderer, camera);
-        } else if (options.id === 15) {
             // 锁定物体
             lockObject();
 

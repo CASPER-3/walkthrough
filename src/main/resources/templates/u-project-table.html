@@ -13,7 +13,7 @@
     <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="detail">预览</a>
     <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="rename">修改信息</a>
     <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">编辑</a>
-    <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="share">分享</a>
+    <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="pointCloudEdit">点云调整</a>
     <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="delete">删除</a>
 </script>
 
@@ -50,8 +50,8 @@
                 barFunction.barRename(projectId);
             } else if (layEvent === 'edit') {
                 barFunction.barEdit(projectId);
-            } else if (layEvent === 'share') {
-                barFunction.barShare(projectId);
+            } else if (layEvent === 'pointCloudEdit') {
+                barFunction.barPointCloudEdit(projectId);
             } else if (layEvent === 'delete') {
                 barFunction.barDelete(projectId);
             }
@@ -95,8 +95,11 @@
                 //window.location = location;
                 window.open(location)
             },
-            barShare: function (projectId) {
-                layer.msg('分享链接已经复制到粘贴板' + projectId);
+            barPointCloudEdit: function (projectId) {
+                // layer.msg('分享链接已经复制到粘贴板' + projectId);
+                var location = '/project/pointCloudEdit?projectId=' + projectId;
+                //window.location = location;
+                window.open(location)
             },
             barDelete: function (projectId) {
                 axios.get('/project/delete', {

@@ -123,4 +123,20 @@ public class ProjectManager {
         log.info("Request\t[Get]/project/tour\tSuccessful\tprojectId:" + projectId);
         return "u-project-tour";
     }
+
+    /**
+     * Mapping for Point Cloud Editor
+     * Wed,Oct25,2023
+     * @param projectId
+     * @param request
+     * @return
+     */
+    @GetMapping("pointCloudEdit")
+    public String pointCloudEdit(@RequestParam("projectId") Long projectId, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        Project info = projectService.getProjectInfo(projectId);
+        session.setAttribute("configurationFileId", info.getConfigFileId());
+        log.info("Request\t[Get]/project/edit\tSuccessful\tprojectId:" + projectId);
+        return "u-point-cloud-edit";
+    }
 }
