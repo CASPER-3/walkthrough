@@ -4,10 +4,20 @@
     <meta charset="UTF-8">
     <title>全景行走漫游</title>
     <link rel="stylesheet" type="text/css" href="/css/sceneTour.css">
+
     <link rel="stylesheet" href="/layui/css/layui.css">
     <script src="/layui/layui.js"></script>
+
+    <script crossorigin src="/js/build/react.development.js"></script>
+    <script crossorigin src="/js/build/react-dom.development.js"></script>
+    <script src="/js/build/babel.min.js"></script>
+    <script src="/js/build/dayjs.min.js"></script>
+    <script src="/js/build/antd.js"></script>
+    <link href="/js/build/reset.css" rel="stylesheet">
+
+
     <script src="/js/lib/axios.min.js"></script>
-    <script src="/js/app/sceneTour.js" type="module"></script>
+    <script src="/js/app/sceneTour.js" type="text/babel" data-type="module"></script>
 
     <script src="/js/lib/Tween.js"></script>
     <script th:inline="javascript">
@@ -52,8 +62,14 @@
 		 }
     	</script>
 <div class="sceneContainer" id="sceneContainer"></div>
-<button type="button" class="layui-btn layui-btn-primary" id="measureDistanceButton">测距</button>
-<button type="button" class="layui-btn layui-btn-primary" id="scaleButton">比例</button>
+<div id="toolPanel">
+
+<!--    <button type="button" class="layui-btn layui-btn-primary" id="measureDistanceButton">测距</button>-->
+<!--    <button type="button" class="layui-btn layui-btn-primary" id="scaleButton">比例</button>-->
+
+</div>
+<i class="layui-icon layui-icon-template-1" style="font-size: 30px;color:white" id="modelMode"></i>
+<i class="layui-icon layui-icon-component" style="font-size: 30px;color:white" id="toolBox"></i>
 
 <div id="scaleCalibrationInput" style="display: none">
 

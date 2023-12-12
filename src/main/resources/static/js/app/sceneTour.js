@@ -46,6 +46,10 @@ let materialLine = null;
 const lineGroup = new THREE.Group();
 let scaling = 8;
 let dm_units = "cm";
+let modelMode = false;
+let camera_last_fov = 75;
+let camera_last_rotaion = new THREE.Vector3;
+let camera_last_position = new THREE.Vector3;
 
 /**
  * Definition of Rotation Matrix for adjusting uv mapping.
@@ -109,6 +113,9 @@ function init() {
     scene = new THREE.Scene();
     scene2 = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera_last_fov = camera.fov;
+    camera_last_position.copy(camera.position);
+    camera_last_rotaion.copy(camera.rotation);
 
 
     renderer = new THREE.WebGLRenderer();
@@ -133,8 +140,11 @@ function init() {
     window.addEventListener('click', onNaviClick);
 
     scene.add(lineGroup);
-    document.getElementById("measureDistanceButton").addEventListener('click', onMeasureDistance);
-    document.getElementById("scaleButton").addEventListener('click', onScaleCalibration);
+    // document.getElementById("measureDistanceButton").addEventListener('click', onMeasureDistance);
+    // document.getElementById("scaleButton").addEventListener('click', onScaleCalibration);
+
+    document.getElementById("modelMode").addEventListener('click', onChangeModelMode);
+    document.getElementById("toolBox").addEventListener('click',onOpenTool)
 
 }
 
@@ -187,6 +197,9 @@ function initControls() {
     firstPerson.applyCollision = false;
     camera.position.set(0, 0, -4.5);
 
+    camera_last_position.copy(camera.position)
+    camera_last_rotaion.copy(camera.rotation)
+
 }
 
 function initLightAndHelper() {
@@ -194,7 +207,15 @@ function initLightAndHelper() {
     const axes = new THREE.AxesHelper(500);
     scene.add(axes);
     scene.add(new THREE.GridHelper(20, 20));
-    scene.background = new THREE.Color(0xeeeeee);
+    // scene.background = new THREE.Color(0xeeeeee);
+    // background
+    scene.background = new THREE.Color(0x353740);
+    // background
+    // var buffgeoBack = new THREE.BufferGeometry();
+    // buffgeoBack.fromGeometry( new THREE.IcosahedronGeometry(3000,2) );
+    // var back = new THREE.Mesh( buffgeoBack, new THREE.MeshBasicMaterial( { map:gradTexture([[0.75,0.6,0.4,0.25], ['#1B1D1E','#3D4143','#72797D', '#b0babf']]), side:THREE.BackSide, depthWrite: false, fog:false }  ));
+    // //back.geometry.applyMatrix(new THREE.Matrix4().makeRotationZ(15*ToRad));
+    // scene.add( back );
 
     const ambientLight = new THREE.AmbientLight(0xcccccc, 0.4);
     scene.add(ambientLight);
@@ -738,7 +759,7 @@ function onScaleCalibration() {
                     scaling = parseInt(scaleNum);
                 }
                 if (scaleUnits !== '') {
-                    dm_units=scaleUnits;
+                    dm_units = scaleUnits;
                 }
                 layer.close(index);
             }
@@ -751,20 +772,20 @@ function onScaleCalibration() {
 /**
  * 平滑过渡算法测试
  */
-function smoothTransition(currentSkybox){
+function smoothTransition(currentSkybox) {
 
-    console.log(currentSkybox,"smoothTransition");
+    console.log(currentSkybox, "smoothTransition");
     let boundingSphereRadius = currentSkybox.geometry.boundingSphere.radius;
     let scaleNum = currentSkybox.scale.x;
-    console.log(boundingSphereRadius,"radius");
-    let sphereGeometry = new THREE.SphereGeometry(boundingSphereRadius,64,32);
-    sphereGeometry.scale(-1,1,1);
+    console.log(boundingSphereRadius, "radius");
+    let sphereGeometry = new THREE.SphereGeometry(boundingSphereRadius, 64, 32);
+    sphereGeometry.scale(-1, 1, 1);
     let sphereMaterial = new THREE.MeshBasicMaterial({
-        map:new THREE.TextureLoader().load("/user_source/newTest/1.jpg"),
-        transparent:false
+        map: new THREE.TextureLoader().load("/user_source/newTest/1.jpg"),
+        transparent: false
     });
-    let boundingSphere = new THREE.Mesh(sphereGeometry,sphereMaterial);
-    boundingSphere.scale.set(scaleNum,scaleNum,scaleNum);
+    let boundingSphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+    boundingSphere.scale.set(scaleNum, scaleNum, scaleNum);
     boundingSphere.position.copy(currentSkybox.position);
     boundingSphere.rotation.y = Math.PI;
 
@@ -773,3 +794,142 @@ function smoothTransition(currentSkybox){
     currentSkybox.visible = false;
 
 }
+
+function changeEntityVisible(entityName, visible) {
+
+    let entities;
+    for (const objGroup of entityGroup.children) {
+        if (objGroup.name === entityName) {
+            entities = objGroup;
+        }
+    }
+    entities.visible = visible;
+
+
+}
+
+function onChangeModelMode() {
+
+    console.log(scene);
+
+    if (modelMode) {
+
+        let tween = new TWEEN.Tween({fov: camera.fov, ars: 0, rotX: camera.rotation.x,rotY:camera.rotation.y,rotZ:camera.rotation.z,posX:camera.position.x,posY:camera.position.y,posZ:camera.position.z}).to({
+            fov: 90,
+            rotX: camera_last_rotaion.x,
+            rotY: camera_last_rotaion.y,
+            rotZ: camera_last_rotaion.z,
+            posX:camera_last_position.x,
+            posY:camera_last_position.y,
+            posZ:camera_last_position.z
+        }, 2300).easing(TWEEN.Easing.Quadratic.Out).onComplete(function () {
+            changeEntityVisible("panoGroup", true);
+            changeEntityVisible("naviGroup", true);
+            changeEntityVisible("mtlModel", false);
+            TWEEN.remove(tween);
+            setTimeout(function () {
+
+            }, 1000)
+
+        }).onUpdate(function (t) {
+            // 视角由大到小
+            camera.fov = t.fov;
+            camera.rotation.x = t.rotX;
+            camera.rotation.y = t.rotY;
+            camera.rotation.z = t.rotZ;
+            camera.position.x = t.posX;
+            camera.position.y = t.posY;
+            camera.position.z = t.posZ;
+            camera.lookAt(0,-1,0);
+
+
+            camera.updateProjectionMatrix()
+
+        }).start();
+
+        orbitControls.enabled = false;
+        firstPerson.enabled = true;
+        camera.fov = camera_last_fov;
+        camera.rotation.set(camera_last_rotaion.x,camera_last_rotaion.y,camera_last_rotaion.z);
+        camera.position.set(camera_last_position.x,camera_last_position.y,camera_last_position.z);
+        // camera.position.set(camera_last_position);
+
+
+
+
+    } else {
+        changeEntityVisible("panoGroup", false);
+        changeEntityVisible("naviGroup", false);
+        changeEntityVisible("mtlModel", true);
+        camera_last_fov = camera.fov;
+        camera_last_position.copy(camera.position);
+        camera_last_rotaion.copy(camera.rotation);
+
+        orbitControls.enabled = true;
+        firstPerson.enabled = false;
+        let tween = new TWEEN.Tween({fov: camera.fov, ars: 0, rotX: camera.rotation.x,rotY:camera.rotation.y,rotZ:camera.rotation.z,posX:camera.position.x,posY:camera.position.y,posZ:camera.position.z}).to({
+            fov: 90,
+            rotX: -1.1710608508039946,
+            rotY: -0.21227883317836568,
+            rotZ: 2.458312113115626,
+            posX:-1.3614197231416612,
+            posY:5.8187457535818945,
+            posZ:2.458312113115626
+        }, 2300).easing(TWEEN.Easing.Quadratic.Out).onComplete(function () {
+            TWEEN.remove(tween);
+            setTimeout(function () {
+
+            }, 1000)
+
+
+        }).onUpdate(function (t) {
+            // 视角由大到小
+            camera.fov = t.fov;
+            camera.rotation.x = t.rotX;
+            camera.rotation.y = t.rotY;
+            camera.rotation.z = t.rotZ;
+            camera.position.x = t.posX;
+            camera.position.y = t.posY;
+            camera.position.z = t.posZ;
+            camera.lookAt(0,-1,0);
+
+
+            camera.updateProjectionMatrix()
+
+        }).start();
+    }
+    modelMode = !modelMode;
+
+}
+
+function onOpenTool(){
+    console.log(scene);
+}
+
+
+/**
+ * Wed,Nov15,2023
+ * TODO
+ * @returns {JSX.Element}
+ * @constructor
+ */
+const ToolPanel = () => {
+
+    return (
+        <div>
+            <antd.Tooltip title="search">
+                <antd.Button type="dashed" size="large"/>
+            </antd.Tooltip>
+        </div>
+
+    )
+}
+
+
+const toolPanel = document.getElementById("toolPanel");
+const root = ReactDOM.createRoot(toolPanel);
+
+// root.render(
+//     <ToolPanel></ToolPanel>
+// );
+

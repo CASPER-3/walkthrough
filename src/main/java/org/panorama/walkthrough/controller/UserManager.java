@@ -72,4 +72,12 @@ public class UserManager {
     @RequestMapping("/smoothTransition")
     public String uCreateSmoothTransitionProject() { return "u-project-smoothTransition"; }
 
+    /**
+     * New Project List UI Test Page.
+     * Tue,Dec12,2023
+     * @return
+     */
+    @RequestMapping("/u-project-list")
+    public String uProjectList() {return "u-project-list";}
+
 }

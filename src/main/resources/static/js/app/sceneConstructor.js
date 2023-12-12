@@ -9,6 +9,7 @@ import * as THREE from '../build/three.module.js';
 import {DDSLoader} from "../lib/loaders/DDSLoader.js";
 import {MTLLoader} from "../lib/loaders/MTLLoader.js";
 import {OBJLoader} from "../lib/loaders/OBJLoader.js";
+import {PLYLoader} from "../lib/loaders/PLYLoader.js";
 
 
 /**
@@ -201,12 +202,27 @@ function constructNaviCircle(parentObject, naviConfigArr, texturesMap) {
 
 }
 
+/**
+ * @LastModify Wed,Nov22,2023, Add multi mesh format loader.
+ * @param parentObject
+ * @param modelConfigArr
+ */
 function constructModel(parentObject, modelConfigArr) {
+
     const manager = new THREE.LoadingManager();
     manager.addHandler(/\.dds$/i, new DDSLoader());
     for (const modelConfig of modelConfigArr) {
 
-        loadModel(parentObject, manager, modelConfig);
+        if(modelConfig["type"]&&modelConfig["type"]==='ply')
+        {
+            console.log("load ply model")
+            loadPLYModel(parentObject,modelConfig);
+        }
+        else
+        {
+            loadModel(parentObject, manager, modelConfig);
+        }
+
 
     }
 }
@@ -284,6 +300,30 @@ function loadModel(parentObject, manager, modelConfig) {
     const onError = () => {
 
     }
+
+}
+
+/**
+ * Wed,Nov22,2023
+ * @param parentObject
+ * @param modelConfig
+ */
+function loadPLYModel(parentObject,modelConfig){
+
+    const loader = new PLYLoader();
+    const pcdPath = modelConfig['url']+modelConfig['id']+'.ply'
+    loader.load(pcdPath, (geometry) => {
+        const material = new THREE.PointsMaterial({size: 0.01, vertexColors: true})
+        const object = new THREE.Points(geometry, material)
+        object.customId = modelConfig["id"];
+        object.name = modelConfig["name"];
+        object.rotation.x = modelConfig["rotation"].x;
+        object.rotation.y = modelConfig["rotation"].y;
+        object.rotation.z = modelConfig["rotation"].z;
+
+        object.position.copy(new THREE.Vector3(modelConfig["position"].x, modelConfig["position"].y, modelConfig["position"].z));
+        parentObject.add(object)
+    })
 
 }
 
