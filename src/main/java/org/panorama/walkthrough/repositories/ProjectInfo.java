@@ -14,4 +14,6 @@ public interface ProjectInfo {
     String getProjectName();
     String getProfile();
     Date getCreationTime();
+
+    String getConfigFileId();
 }

@@ -23,4 +23,5 @@ public class ProjectIntro implements ProjectInfo {
     String projectName;
     Date creationTime;
     String profile;
+    String configFileId;
 }
