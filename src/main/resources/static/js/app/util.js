@@ -37,6 +37,23 @@ export function generateObjectArrayForControls(scene) {
 //     }
 // }
 
+/**
+ *
+ * @param obj
+ */
+export function getAllPointClouds(obj){
+
+    let childrenArr = [];
+    let pcdGroup = obj.children[0];
+    for (const elements of pcdGroup.children) {
+        childrenArr.push(elements)
+    }
+
+    return  childrenArr;
+
+
+}
+
 export function getAllChildren(obj) {
 
     let childrenArr = [];

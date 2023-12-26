@@ -3,6 +3,14 @@ const userId = sessionStorage.getItem("userId");
 const App = () => {
 
     const [data, setData] = React.useState([]);
+    const [imageError, setImageError] = React.useState({});
+    const handleImageError = (imageId) => {
+        setImageError((prevStates) => ({
+            ...prevStates,
+            [imageId]: true,
+        }));
+    };
+    const defaultPicUrl = "https://vrlab-static.ljcdn.com/release/web/console-toolkit/static/media/defaultCover.4ffe404a6877dad2e7b5.png";
     React.useEffect(() => {
         axios.get("/project/list")
             .then(response => {
@@ -29,14 +37,14 @@ const App = () => {
 
 
     return (<antd.List
-        borderd={true}
+        borderd="true"
         itemLayout="vertical"
         size="large"
         pagination={{
             onChange: (page) => {
                 console.log(page);
             },
-            pageSize: 4,
+            pageSize: 3,
         }}
         dataSource={data}
         footer={
@@ -46,7 +54,7 @@ const App = () => {
         }
         renderItem={(item) => (
             <antd.List.Item
-                key={item.title}
+                key={item.projectId}
                 actions={[
                     <antd.Button size='small' onClick={() => {
                         window.open('/project/pointCloudEdit?projectId=' + item.projectId)
@@ -62,13 +70,14 @@ const App = () => {
                     <img
                         width={272}
                         alt="logo"
-                        src={"/project/getEditSources/" + userId + "/" + item.configurationId + "/thumb.jpg"}
+                        src={imageError[item.projectId]?defaultPicUrl:"/project/getEditSources/" + userId + "/" + item.configurationId + "/thumb.jpg"}
+                        onError={()=>{handleImageError(item.projectId)}}
                     />]
                 }
             >
                 <antd.List.Item.Meta
                     // avatar={<antd.Avatar src={item.avatar} />}
-                    title={<a href={item.href}>{item.title}</a>}
+                    title={<a href={item.href} target="_blank">{item.title} </a>}
                     description={item.description === "" ? "暂无介绍" : item.description}
                 />
                 {item.content}

@@ -4,6 +4,7 @@
  */
 import * as THREE from "../build/three.module.js"
 import {PLYLoader} from "../lib/loaders/PLYLoader.js";
+import SpriteText from "./SpriteText.js"
 
 /**
  * Entry method for load point clouds from configuration file.
@@ -51,11 +52,13 @@ function constructPointCloud(entityGroup, pointCloudConfigArr) {
     const pointCloudGroup = new THREE.Group();
     pointCloudGroup.name = "pointCloudGroup";
     const loader = new PLYLoader();
+    let count = 0;
     for (const pointCloudConfig of pointCloudConfigArr) {
 
         const pcdPath = pointCloudConfig['url']
         loader.load(pcdPath, (geometry) => {
-            const material = new THREE.PointsMaterial({size: 0.01, vertexColors: true})
+            const material = new THREE.PointsMaterial({size: 0.001, vertexColors: true})
+            console.log("load pyl geometry",geometry)
             const object = new THREE.Points(geometry, material)
             object.customId = pointCloudConfig["id"];
             object.name = pointCloudConfig["name"];
@@ -64,7 +67,37 @@ function constructPointCloud(entityGroup, pointCloudConfigArr) {
             object.rotation.z = pointCloudConfig["rotation"].z;
 
             object.position.copy(new THREE.Vector3(pointCloudConfig["position"].x, pointCloudConfig["position"].y, pointCloudConfig["position"].z));
-            pointCloudGroup.add(object)
+            // object.rotateX(-Math.PI/2)
+            // object.rotateZ(-Math.PI/2)
+
+            // let spriteLabel = makeTextSprite(count,
+            //     { fontsize: 50, borderColor: { r: 0, g: 0, b: 0, a: 1 }, backgroundColor: { r: 71, g: 103, b: 254, a: 1 } });
+            // spriteLabel.scale.set(1,1,1);
+
+            // const lable = new SpriteText(count,2);
+            // lable.backgroundColor = "#4747fe";
+            // lable.borderWidth = 2;
+            // lable.borderRadius = 2;
+            // lable.padding = [6,2];
+            // lable.fontSize = 90;
+            // lable.borderColor = "black";
+            const ContainerText = new SpriteText(count);
+            ContainerText.color = 'white';
+            ContainerText.backgroundColor = 'rgba(71, 103, 254,1)';
+            ContainerText.borderColor = 'black';
+            ContainerText.borderWidth = 1;
+            ContainerText.borderRadius = 3;
+            ContainerText.padding = [3, 1];
+            ContainerText.scale.set(0.8,0.8,0.8);
+
+            // let pointCloudWithLable = new THREE.Object3D();
+            // pointCloudWithLable.add(object);
+            // pointCloudWithLable.add(ContainerText);
+            object.add(ContainerText)
+
+
+            pointCloudGroup.add(object);
+            ++count;
         })
 
     }
@@ -82,3 +115,4 @@ function constructPointCloud(entityGroup, pointCloudConfigArr) {
 
 
 }
+

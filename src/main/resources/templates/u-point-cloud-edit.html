@@ -16,7 +16,9 @@
     <link href="/js/build/reset.css" rel="stylesheet">
 
     <script src="/js/lib/axios.min.js"></script>
+
     <script src="/js/app/pointCloudEditor.js" type="text/babel" data-type="module"></script>
+
 
 </head>
 <body>
@@ -192,6 +194,11 @@
                     <span><i class="layui-icon layui-icon-password"></i>锁定物体</span>
                 </div>
             </li>
+            <li lay-options="{id: 14}">
+                <div class="layui-menu-body-title">
+                    <span><i class="layui-icon layui-icon-slider"></i>TransformMatrix</span>
+                </div>
+            </li>
 
         </ul>
     </div>
@@ -221,6 +228,17 @@
             <div class="layui-input-block">
                 <input type="text" name="title" required lay-verify="required" placeholder="请输入真实距离"
                        autocomplete="off" class="layui-input">
+            </div>
+        </div>
+    </form>
+</div>
+
+<div id="transformMatrixInput" style="display: none">
+    <form class="layui-form" action="">
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">转换矩阵</label>
+            <div class="layui-input-block">
+                <textarea name="desc" placeholder="请输入内容" class="layui-textarea" id="matrixInput"></textarea>
             </div>
         </div>
     </form>

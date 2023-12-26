@@ -18,7 +18,7 @@ import {GLTFLoader} from "/js/lib/loaders/GLTFLoader.js";
 import {PLYLoader} from "/js/lib/loaders/PLYLoader.js";
 import {PLYExporter} from "/js/lib/exporters/PLYExporter.js";
 
-import {getAllChildren, rad2deg} from "/js/app/util.js"
+import {getAllPointClouds, rad2deg} from "/js/app/util.js"
 import {pointCloudConstructor} from "/js/app/pointCloudConstructor.js"
 import {updatePointCloudConfig} from "/js/app/pointCloudExporter.js";
 
@@ -71,7 +71,7 @@ function init() {
     scene = new THREE.Scene();
     scene2 = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 0, 10);
+    camera.position.set(10, 0, 0);
 
     renderer = new THREE.WebGLRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -148,7 +148,7 @@ function initControls() {
     camera.position.set(0, 0, 2);
 
     transformControl = new TransformControls(camera, renderer.domElement);
-    transformControl.rotationSnap = 0.5 * Math.PI;
+    //transformControl.rotationSnap = 0.5 * Math.PI;
     transformControl.addEventListener('change', () => {
         if (currentSelected !== null) {
             currentBoxhelper.setFromObject(currentSelected);
@@ -168,7 +168,9 @@ function initLightAndHelper() {
 
     const axes = new THREE.AxesHelper(500);
     scene.add(axes);
-    scene.add(new THREE.GridHelper(200, 200));
+    const grid = new THREE.GridHelper(200, 200);
+    grid.position.set(0,-1.5,0);
+    scene.add(grid);
     //scene.background = new THREE.Color(0xeeeeee);
     scene.background = new THREE.Color(0x000000);
 
@@ -917,25 +919,35 @@ layui.use(['dropdown', 'jquery', 'layer'], () => {
             transformControl.enabled = true;
             enableSelect = true;
             if (entityArr === null) {
-                entityArr = getAllChildren(entityGroup);
+                entityArr = getAllPointClouds(entityGroup);
+                console.log("entityArr",entityArr)
             }
 
         } else if (options.id === 5) {
             // 开启移动物体模式
             //enableSelect = false;
             // transformControl.enabled = true;
+            transformControl.showX = true;
+            transformControl.showY = true;
+            transformControl.showZ = true;
             changeTransformControlMode(transformControl, "translate");
 
         } else if (options.id === 6) {
             // 开启旋转物体模式
             //enableSelect = false;
             // transformControl.enabled = true;
+            transformControl.showX = false;
+            transformControl.showY = true;
+            transformControl.showZ = false;
             changeTransformControlMode(transformControl, "rotate");
 
         } else if (options.id === 7) {
             // 开启缩放物体模式
             //enableSelect = false;
             // transformControl.enabled = true;
+            transformControl.showX = true;
+            transformControl.showY = true;
+            transformControl.showZ = true;
             changeTransformControlMode(transformControl, "scale");
 
         } else if (options.id === 8) {
@@ -986,6 +998,67 @@ layui.use(['dropdown', 'jquery', 'layer'], () => {
         } else if (options.id === 13) {
             // 锁定物体
             lockObject();
+
+        } else if(options.id === 14){
+
+            layer.open({
+                title: 'Set Transform Matrix',
+                type: 1,
+                btn: ['确认', '取消'],
+                content: $('#transformMatrixInput'),
+                icon: 1,
+                yes:function (index,layero){
+                    console.log("matrix_before_init",currentSelected.matrix);
+                    console.log("matrixWorld_before_init",currentSelected.matrixWorld);
+
+                    currentSelected.rotation.set(0, 0, 0);
+
+
+                    currentSelected.position.set(0, 0, 0);
+
+                    console.log("matrix_after_init",currentSelected.matrix);
+                    console.log("matrixWorld_after_init",currentSelected.matrixWorld);
+
+
+                    let inputValue = $('#matrixInput').val()
+                    console.log(inputValue)
+                    console.log(currentSelected)
+                    var textArray = inputValue.split(/\s+/);
+                    console.log("textArray",textArray)
+                    let transformMatrix = new THREE.Matrix4();
+                    transformMatrix.set(
+                        1*textArray[0],1*textArray[1],1*textArray[2],1*textArray[3],
+                        1*textArray[4],1*textArray[5],1*textArray[6],-textArray[7],
+                        1*textArray[8],1*textArray[9],1*textArray[10],-textArray[11],
+                        1*textArray[12],1*textArray[13],1*textArray[14],1*textArray[15]
+                    )
+                    console.log(transformMatrix)
+                    let pos = new THREE.Vector3();
+                    let rotate = new THREE.Quaternion();
+                    let scale = new THREE.Vector3();
+                    let euler_from_matrix = new THREE.Euler();
+                    let euler_from_quaternion = new THREE.Euler();
+
+                    transformMatrix.decompose(pos,rotate,scale);
+                    euler_from_matrix.setFromRotationMatrix(transformMatrix);
+                    euler_from_quaternion.setFromQuaternion(rotate)
+                    console.log("pos",pos)
+                    console.log("rotate",rotate)
+                    console.log("scale",scale)
+                    console.log("euler_from_matrix",euler_from_matrix);
+                    console.log("euler_from_quaternion",euler_from_quaternion)
+
+                    currentSelected.applyMatrix4(transformMatrix);
+                    // currentSelected.rotateX(-Math.PI/2)
+                    // currentSelected.rotateZ(-Math.PI/2)
+                    // currentSelected.matrix.copy(transformMatrix);
+
+                    // currentSelected.matrixAutoUpdate = false;
+                    currentSelected.updateMatrixWorld(true);
+                    console.log("matrixWorld_after_trans",currentSelected.matrixWorld)
+                }
+            })
+
 
         }
     })

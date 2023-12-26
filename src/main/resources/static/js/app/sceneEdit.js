@@ -155,6 +155,11 @@ function initControls() {
 
 }
 
+function changeControls(){
+
+}
+
+
 function initLightAndHelper() {
 
     const axes = new THREE.AxesHelper(500);
@@ -939,6 +944,10 @@ layui.use(['dropdown', 'jquery', 'layer'], () => {
         } else if (options.id === 15) {
             // 锁定物体
             lockObject();
+
+        } else if(options.id ===16){
+            // 预览项目
+
 
         }
     })
