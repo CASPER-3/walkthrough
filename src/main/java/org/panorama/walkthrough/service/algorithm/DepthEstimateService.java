@@ -25,5 +25,4 @@ public abstract class DepthEstimateService {
     abstract Boolean doDepthEstimate(String imageDir,String imgName);
 
 
-
 }

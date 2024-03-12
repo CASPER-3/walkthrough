@@ -25,4 +25,6 @@ public interface StorageService {
 
     byte[] readJsonFile(String path);
 
+    String getLocation();
+
 }

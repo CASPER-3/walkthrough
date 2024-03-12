@@ -6,6 +6,7 @@ import com.alibaba.fastjson2.JSONObject;
 import org.panorama.walkthrough.model.Project;
 import org.panorama.walkthrough.repositories.ProjectRepository;
 import org.panorama.walkthrough.service.algorithm.DepthEstimateService;
+import org.panorama.walkthrough.service.algorithm.ThumbGenerateService;
 import org.panorama.walkthrough.service.project.ProjectService;
 import org.panorama.walkthrough.service.storage.StorageService;
 import org.slf4j.Logger;
@@ -15,6 +16,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,11 +45,14 @@ public class UploadResourcesController {
 
     private final DepthEstimateService depthEstimateService;
 
+    private final ThumbGenerateService thumbGenerateService;
+
     @Autowired
-    public UploadResourcesController(StorageService service, ProjectRepository projectRepository, DepthEstimateService depthEstimateServ) {
+    public UploadResourcesController(StorageService service, ProjectRepository projectRepository, DepthEstimateService depthEstimateServ, ThumbGenerateService thumbGenerateServ) {
         this.storageService = service;
         this.projectRepository = projectRepository;
         this.depthEstimateService = depthEstimateServ;
+        this.thumbGenerateService = thumbGenerateServ;
     }
 
     /**
@@ -86,6 +93,25 @@ public class UploadResourcesController {
 
                 System.out.println(ex.getMessage());
 
+            }
+
+            /**
+             *  判断项目是否存在缩略图,没有的话调用生成缩略图服务
+             *  Tue,Mar12,2024
+             */
+            String rootLocation = storageService.getLocation();
+            Path path = Paths.get(rootLocation + '/' + prefix + "thumb.jpg");
+            if (!Files.exists(path)) {
+
+                try {
+
+                    thumbGenerateService.thumbGenerate(prefix, imageName);
+
+                } catch (Exception ex) {
+
+                    System.out.println(ex.getMessage());
+
+                }
             }
 
         }

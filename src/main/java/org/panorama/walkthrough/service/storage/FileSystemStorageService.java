@@ -28,9 +28,12 @@ public class FileSystemStorageService implements StorageService {
 
     private final Path rootLocation;
 
+    private final String strRootLocation;
+
     @Autowired
     public FileSystemStorageService(StorageProperties properties) {
         this.rootLocation = Paths.get(properties.getLocation());
+        this.strRootLocation = properties.getLocation();
         init();
     }
 
@@ -139,5 +142,9 @@ public class FileSystemStorageService implements StorageService {
 
         return jsonFile;
 
+    }
+
+    public String getLocation(){
+        return this.strRootLocation;
     }
 }
