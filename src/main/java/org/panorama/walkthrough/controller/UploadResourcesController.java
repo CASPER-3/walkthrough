@@ -6,6 +6,7 @@ import com.alibaba.fastjson2.JSONObject;
 import org.panorama.walkthrough.model.Project;
 import org.panorama.walkthrough.repositories.ProjectRepository;
 import org.panorama.walkthrough.service.algorithm.DepthEstimateService;
+import org.panorama.walkthrough.service.algorithm.Equirectangular2CubeService;
 import org.panorama.walkthrough.service.algorithm.ThumbGenerateService;
 import org.panorama.walkthrough.service.project.ProjectService;
 import org.panorama.walkthrough.service.storage.StorageService;
@@ -47,12 +48,15 @@ public class UploadResourcesController {
 
     private final ThumbGenerateService thumbGenerateService;
 
+    private final Equirectangular2CubeService equirectangular2CubeService;
+
     @Autowired
-    public UploadResourcesController(StorageService service, ProjectRepository projectRepository, DepthEstimateService depthEstimateServ, ThumbGenerateService thumbGenerateServ) {
+    public UploadResourcesController(StorageService service, ProjectRepository projectRepository, DepthEstimateService depthEstimateServ, ThumbGenerateService thumbGenerateServ,Equirectangular2CubeService equirectangular2CubeServ) {
         this.storageService = service;
         this.projectRepository = projectRepository;
         this.depthEstimateService = depthEstimateServ;
         this.thumbGenerateService = thumbGenerateServ;
+        this.equirectangular2CubeService = equirectangular2CubeServ;
     }
 
     /**
@@ -88,6 +92,7 @@ public class UploadResourcesController {
             try {
 
                 depthEstimateService.depthEstimate(prefix, imageName);
+                equirectangular2CubeService.equirectangular2Cube(prefix,imageName);
 
             } catch (Exception ex) {
 
