@@ -165,6 +165,7 @@ const UploadSceneContent = () => {
             addSkyboxTexture(id, sceneName, fileType, projectConfig);
             addSkybox(nanoid(genIdLength), id, sceneName, projectConfig);
             addPointCloud(nanoid(genIdLength), id, sceneName + '.ply', projectConfig);
+            addModel(id+'.erp.obj',sceneName,projectConfig)
         })
             .catch((info) => {
                 console.log('validate Failed:', info);

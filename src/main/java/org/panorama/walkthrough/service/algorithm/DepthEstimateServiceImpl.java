@@ -22,21 +22,35 @@ public class DepthEstimateServiceImpl extends DepthEstimateService {
     Boolean doDepthEstimate(String imageDir,String imageName) {
 
         String command = getCommand(imageDir, imageName);
+        String layoutCommand = getLayoutCommand(imageDir,imageName);
 
 
         try {
             Process process = Runtime.getRuntime().exec(command);
+            Process layoutProcess = Runtime.getRuntime().exec(layoutCommand);
 
             StringBuilder sb = new StringBuilder();
             BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String read;
 
+            StringBuilder sb_layout = new StringBuilder();
+            BufferedReader br_layout = new BufferedReader(new InputStreamReader(layoutProcess.getInputStream()));
+            String read_layout;
+
+
             while ((read = br.readLine()) != null) {
                 sb.append(read);
+
+            }
+
+            while((read_layout=br_layout.readLine())!=null){
+                sb_layout.append(read_layout);
             }
 
             br.close();
+            br_layout.close();
             System.out.println(sb.toString());
+            System.out.println(sb_layout.toString());
             return true;
 
         } catch (IOException e) {
@@ -51,5 +65,16 @@ public class DepthEstimateServiceImpl extends DepthEstimateService {
         String fullImageDir = saveDir+ imageName;
         command+=" "+saveDir+" --inp "+fullImageDir;
         return command;
+    }
+
+    private static String getLayoutCommand(String imageDir,String imageName){
+
+        String pathPrefix = "../../../../../../userData/projectResources/";
+        String command = "powershell cd src/main/resources/static/python/HoHoNet ;  D:\\anaconda3\\shell\\condabin\\conda-hook.ps1 ; conda activate pytorch;python infer_depth_layout.py  --out";
+        String saveDir = pathPrefix+ imageDir;
+        String fullImageDir = saveDir+ imageName;
+        command+=" "+saveDir+" --inp "+fullImageDir;
+        return command;
+
     }
 }

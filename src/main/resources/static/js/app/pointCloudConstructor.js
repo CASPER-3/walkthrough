@@ -6,6 +6,8 @@ import * as THREE from "../build/three.module.js"
 import {PLYLoader} from "../lib/loaders/PLYLoader.js";
 import SpriteText from "./SpriteText.js"
 
+let pcd_idx = 0;
+
 /**
  * Entry method for load point clouds from configuration file.
  * Wed,Oct25,2023
@@ -35,8 +37,10 @@ export function pointCloudConstructor(scene, entityGroup, jsonUrl) {
 function loadPointCloudFromConfiguration(scene, entityGroup, pointCloudConfig) {
 
     const pointCloudArray = pointCloudConfig['pointclouds'];
+    console.log(pointCloudArray);
     constructPointCloud(entityGroup, pointCloudArray);
     scene.add(entityGroup)
+
 
 }
 
@@ -62,6 +66,11 @@ function constructPointCloud(entityGroup, pointCloudConfigArr) {
             const object = new THREE.Points(geometry, material)
             object.customId = pointCloudConfig["id"];
             object.name = pointCloudConfig["name"];
+            if(pointCloudConfig["index"]!==null&&pointCloudConfig["index"]!==undefined){
+
+                object.customIndex = pointCloudConfig["index"];
+
+            }
             object.rotation.x = pointCloudConfig["rotation"].x;
             object.rotation.y = pointCloudConfig["rotation"].y;
             object.rotation.z = pointCloudConfig["rotation"].z;

@@ -169,7 +169,7 @@ function initLightAndHelper() {
     const axes = new THREE.AxesHelper(500);
     scene.add(axes);
     const grid = new THREE.GridHelper(200, 200);
-    grid.position.set(0,-1.5,0);
+    grid.position.set(0, -1.5, 0);
     scene.add(grid);
     //scene.background = new THREE.Color(0xeeeeee);
     scene.background = new THREE.Color(0x000000);
@@ -448,7 +448,7 @@ function save(blob, filename) {
 
 }
 
-//
+// 将buffer保存为文件
 function saveArrayBuffer(buffer, filename) {
 
     save(new Blob([buffer], {type: 'application/octet-stream'}), filename);
@@ -463,7 +463,7 @@ function exportPointClouds() {
 
     // Parse the input and generate the ply output
     const data = exporter.parse(entityGroup.children[0]);
-    saveArrayBuffer(data,"fusion.ply")
+    saveArrayBuffer(data, "fusion.ply")
 
 
 }
@@ -920,7 +920,7 @@ layui.use(['dropdown', 'jquery', 'layer'], () => {
             enableSelect = true;
             if (entityArr === null) {
                 entityArr = getAllPointClouds(entityGroup);
-                console.log("entityArr",entityArr)
+                console.log("entityArr", entityArr)
             }
 
         } else if (options.id === 5) {
@@ -999,7 +999,7 @@ layui.use(['dropdown', 'jquery', 'layer'], () => {
             // 锁定物体
             lockObject();
 
-        } else if(options.id === 14){
+        } else if (options.id === 14) {
 
             layer.open({
                 title: 'Set Transform Matrix',
@@ -1007,30 +1007,30 @@ layui.use(['dropdown', 'jquery', 'layer'], () => {
                 btn: ['确认', '取消'],
                 content: $('#transformMatrixInput'),
                 icon: 1,
-                yes:function (index,layero){
-                    console.log("matrix_before_init",currentSelected.matrix);
-                    console.log("matrixWorld_before_init",currentSelected.matrixWorld);
+                yes: function (index, layero) {
+                    // console.log("matrix_before_init",currentSelected.matrix);
+                    console.log("matrixWorld_before_init", currentSelected.matrixWorld);
 
                     currentSelected.rotation.set(0, 0, 0);
 
 
                     currentSelected.position.set(0, 0, 0);
 
-                    console.log("matrix_after_init",currentSelected.matrix);
-                    console.log("matrixWorld_after_init",currentSelected.matrixWorld);
+                    console.log("matrix_after_init", currentSelected.matrix);
+                    console.log("matrixWorld_after_init", currentSelected.matrixWorld);
 
 
                     let inputValue = $('#matrixInput').val()
                     console.log(inputValue)
                     console.log(currentSelected)
                     var textArray = inputValue.split(/\s+/);
-                    console.log("textArray",textArray)
+                    console.log("textArray", textArray)
                     let transformMatrix = new THREE.Matrix4();
                     transformMatrix.set(
-                        1*textArray[0],1*textArray[1],1*textArray[2],1*textArray[3],
-                        1*textArray[4],1*textArray[5],1*textArray[6],-textArray[7],
-                        1*textArray[8],1*textArray[9],1*textArray[10],-textArray[11],
-                        1*textArray[12],1*textArray[13],1*textArray[14],1*textArray[15]
+                        1 * textArray[0], 1 * textArray[1], 1 * textArray[2], 1 * textArray[3],
+                        1 * textArray[4], 1 * textArray[5], 1 * textArray[6], 1 * textArray[7],
+                        1 * textArray[8], 1 * textArray[9], 1 * textArray[10], 1 * textArray[11],
+                        1 * textArray[12], 1 * textArray[13], 1 * textArray[14], 1 * textArray[15]
                     )
                     console.log(transformMatrix)
                     let pos = new THREE.Vector3();
@@ -1039,14 +1039,14 @@ layui.use(['dropdown', 'jquery', 'layer'], () => {
                     let euler_from_matrix = new THREE.Euler();
                     let euler_from_quaternion = new THREE.Euler();
 
-                    transformMatrix.decompose(pos,rotate,scale);
+                    transformMatrix.decompose(pos, rotate, scale);
                     euler_from_matrix.setFromRotationMatrix(transformMatrix);
                     euler_from_quaternion.setFromQuaternion(rotate)
-                    console.log("pos",pos)
-                    console.log("rotate",rotate)
-                    console.log("scale",scale)
-                    console.log("euler_from_matrix",euler_from_matrix);
-                    console.log("euler_from_quaternion",euler_from_quaternion)
+                    console.log("pos", pos)
+                    console.log("rotate", rotate)
+                    console.log("scale", scale)
+                    console.log("euler_from_matrix", euler_from_matrix);
+                    console.log("euler_from_quaternion", euler_from_quaternion)
 
                     currentSelected.applyMatrix4(transformMatrix);
                     // currentSelected.rotateX(-Math.PI/2)
@@ -1055,9 +1055,84 @@ layui.use(['dropdown', 'jquery', 'layer'], () => {
 
                     // currentSelected.matrixAutoUpdate = false;
                     currentSelected.updateMatrixWorld(true);
-                    console.log("matrixWorld_after_trans",currentSelected.matrixWorld)
+                    console.log("matrixWorld_after_trans", currentSelected.matrixWorld)
                 }
+
+
             })
+        } else if (options.id === 15) {
+
+            console.log("读取Extrinsics文件");
+            document.getElementById('fileInput').click();
+
+            //读取外参矩阵文件
+
+            document.getElementById('fileInput').addEventListener('change', function () {
+                const file = this.files[0];
+                const reader = new FileReader();
+
+                reader.onload = function (e) {
+                    const content = e.target.result;
+                    console.log(content); // 这里可以对文件内容进行处理，比如解析外参矩阵
+                    const lines = content.split('\n');
+                    const matrixCount = parseInt(lines[0]);
+
+                    let currentIndex = 1; // 当前处理的行索引
+
+                    if (entityArr === null) {
+                        entityArr = getAllPointClouds(entityGroup);
+                    }
+
+                    console.log("entityArr", entityArr);
+
+                    let matrix_arr = [];
+
+
+                    // 循环读取每个矩阵的内容
+                    for (let i = 0; i < matrixCount; i++) {
+                        const matrix = [];
+                        let transformMatrix = new THREE.Matrix4();
+                        const matrix_text = lines.slice(currentIndex, currentIndex + 4);
+
+                        for (let j = 0; j < 4; ++j) {
+
+                            const row = matrix_text[j];
+                            const row_array = row.split(/\s+/)
+                            matrix.push(row_array);
+
+
+                        }
+
+                        console.log(matrix);
+                        transformMatrix.set(
+                            1 * matrix[0][0], 1 * matrix[0][1], 1 * matrix[0][2], 1 * matrix[0][3],
+                            1 * matrix[1][0], 1 * matrix[1][1], 1 * matrix[1][2], 1 * matrix[1][3],
+                            1 * matrix[2][0], 1 * matrix[2][1], 1 * matrix[2][2], 1 * matrix[2][3],
+                            1 * matrix[3][0], 1 * matrix[3][1], 1 * matrix[3][2], 1 * matrix[3][3]
+                        )
+
+                        console.log(transformMatrix)
+
+                        console.log(matrixCount - 1 - i)
+                        console.log(entityArr[matrixCount - i - 1]);
+
+                        matrix_arr.push(transformMatrix);
+
+
+                        currentIndex += 4
+
+
+                    }
+
+                    for(let i = 0;i<matrix_arr.length; ++i){
+                        let custom_idx = entityArr[i].customIndex;
+                        entityArr[i].applyMatrix4(matrix_arr[custom_idx]);
+                        entityArr[i].updateMatrixWorld(true);
+                    }
+                };
+
+                reader.readAsText(file);
+            });
 
 
         }

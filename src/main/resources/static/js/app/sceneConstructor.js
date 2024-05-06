@@ -148,10 +148,14 @@ function constructSkybox(parentObject, skyboxConfigArr, texturesMap) {
         skyBox.rotation.y = skyboxConfig["rotation"].y;
         skyBox.rotation.z = skyboxConfig["rotation"].z;
 
+        skyBox.rotateX(0.5*Math.PI)
+        skyBox.rotateZ(0.5*Math.PI)
+        skyBox.rotateZ(Math.PI)
+
         skyBox.position.copy(new THREE.Vector3(skyboxConfig["position"].x, skyboxConfig["position"].y, skyboxConfig["position"].z));
         skyBox.name = skyboxConfig["name"];
         skyBox.customId = skyboxConfig["id"];
-        console.log(textures_1[0],"texture_1[0]");
+        console.log(textures_1[0], "texture_1[0]");
 
         skyBox.tileWidth = textures_1[0].tileWidth;
         if (parentObject.isTourMode) {
@@ -213,20 +217,18 @@ function constructModel(parentObject, modelConfigArr) {
     manager.addHandler(/\.dds$/i, new DDSLoader());
     for (const modelConfig of modelConfigArr) {
 
-        if(modelConfig["type"]&&modelConfig["type"]==='ply')
-        {
+        if (modelConfig["type"] && modelConfig["type"] === 'ply') {
             console.log("load ply model")
-            loadPLYModel(parentObject,modelConfig);
-        }
-        else
-        {
-            loadModel(parentObject, manager, modelConfig);
+            loadPLYModel(parentObject, modelConfig);
+        } else {
+            loadOBJModel(parentObject, manager, modelConfig);
         }
 
 
     }
 }
 
+// generate map for navi circles mapping to cube
 function generateNaviMap(scene, naviConfigArr) {
 
     let naviMap = new Map;
@@ -268,7 +270,7 @@ function loadModel(parentObject, manager, modelConfig) {
             materials.preload();
 
             new OBJLoader(manager)
-                .setMaterials(materials)
+                //.setMaterials(materials)
                 .setPath(modelConfig["url"])
                 .load(modelConfig["id"] + '.obj', function (object) {
                     model = object;
@@ -304,14 +306,69 @@ function loadModel(parentObject, manager, modelConfig) {
 }
 
 /**
+ * Wed,Apr3,2024
+ * @param parentObject
+ * @param manager
+ * @param modelConfig
+ */
+function loadOBJModel(parentObject, manager, modelConfig) {
+
+    let model, obj;
+    const loader = new OBJLoader(manager);
+
+    loader.load(modelConfig["url"]+modelConfig["id"], (object) => {
+            model = object;
+            obj = model;
+            if (obj instanceof THREE.Object3D)
+            {
+                obj.traverse (function (mesh)
+                {
+                    if (! (mesh instanceof THREE.Mesh)) return;
+
+                    mesh.material.side = THREE.DoubleSide;
+                });
+            }
+            // obj.name = modelConfig["name"];
+            obj.name = "mtlModel";
+
+            obj.children[0].rotateX(modelConfig["rotation"].x);
+            obj.children[0].rotateY(modelConfig["rotation"].y);
+            obj.children[0].rotateZ(modelConfig["rotation"].z);
+
+            obj.children[0].position.copy(new THREE.Vector3(modelConfig["position"].x, modelConfig["position"].y, modelConfig["position"].z));
+            obj.children[0].scale.set(modelConfig["scale"].x, modelConfig["scale"].y, modelConfig["scale"].z);
+
+            console.log(object.position);
+            obj.children[0].name = modelConfig["name"];
+            obj.children[0].customId = modelConfig["id"];
+            object.visible = !parentObject.isTourMode;
+            parentObject.add(object);
+
+        }, function (xhr) {
+
+            //console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+
+        },
+        // called when loading has errors
+        function (error) {
+
+
+            console.log('An error happened');
+            console.log(error)
+
+        })
+
+}
+
+/**
  * Wed,Nov22,2023
  * @param parentObject
  * @param modelConfig
  */
-function loadPLYModel(parentObject,modelConfig){
+function loadPLYModel(parentObject, modelConfig) {
 
     const loader = new PLYLoader();
-    const pcdPath = modelConfig['url']+modelConfig['id']+'.ply'
+    const pcdPath = modelConfig['url'] + modelConfig['id'] + '.ply'
     loader.load(pcdPath, (geometry) => {
         const material = new THREE.PointsMaterial({size: 0.01, vertexColors: true})
         const object = new THREE.Points(geometry, material)

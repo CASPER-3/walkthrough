@@ -9,7 +9,9 @@ import {getSkyboxArr, getNaviCircleArr, getModelArr, genObjectMap} from "/js/app
 
 const configurationFileId = sessionStorage.getItem("configurationFileId");
 const userId = sessionStorage.getItem("userId");
-const PREFIX = "/project/getEditSources/"
+const PREFIX = "/project/getEditSources/";
+
+let pcd_idx = 0;
 
 /**
  * 生成创建新项目的初始默认配置文件json字符串
@@ -102,7 +104,7 @@ export function addSkybox(skyboxId, textureId, sceneName, projectConfig) {
 }
 
 /**
- * 创建新项目时为项目配置文件 'projectConfig' 的 'scene.skybox' 项添加一个新的模型项.
+ * 创建新项目时为项目配置文件 'projectConfig' 的 'scene.model' 项添加一个新的模型项.
  * @param modelId
  * @param modelName
  * @param projectConfig
@@ -138,6 +140,7 @@ export function addPointCloud(pointCloudId, textureId, pointCloudName, projectCo
     projectConfig.pointclouds.push({
         id: pointCloudId,
         name: pointCloudName,
+        index:pcd_idx,
         textureId: textureId,
         url: PREFIX + userId + "/" + id + "/" + textureId+".erp.ply",
         rotation: {x: 0, y: 0, z: 0},
@@ -145,6 +148,8 @@ export function addPointCloud(pointCloudId, textureId, pointCloudName, projectCo
         scale: {x: 1, y: 1, z: 1},
 
     });
+
+    ++pcd_idx;
 
 }
 
