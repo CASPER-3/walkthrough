@@ -6,6 +6,7 @@ import com.alibaba.fastjson2.JSONObject;
 import org.panorama.walkthrough.model.Project;
 import org.panorama.walkthrough.repositories.ProjectRepository;
 import org.panorama.walkthrough.service.algorithm.DepthEstimateService;
+import org.panorama.walkthrough.service.algorithm.Dust3rService;
 import org.panorama.walkthrough.service.algorithm.Equirectangular2CubeService;
 import org.panorama.walkthrough.service.algorithm.ThumbGenerateService;
 import org.panorama.walkthrough.service.project.ProjectService;
@@ -23,6 +24,7 @@ import java.nio.file.Paths;
 import java.sql.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -46,14 +48,19 @@ public class UploadResourcesController {
 
     private final DepthEstimateService depthEstimateService;
 
+    private final Dust3rService dust3rService;
+
     private final ThumbGenerateService thumbGenerateService;
 
     private final Equirectangular2CubeService equirectangular2CubeService;
 
+    private AtomicInteger counter = new AtomicInteger(0);
+
     @Autowired
-    public UploadResourcesController(StorageService service, ProjectRepository projectRepository, DepthEstimateService depthEstimateServ, ThumbGenerateService thumbGenerateServ,Equirectangular2CubeService equirectangular2CubeServ) {
+    public UploadResourcesController(StorageService service, ProjectRepository projectRepository, DepthEstimateService depthEstimateServ, ThumbGenerateService thumbGenerateServ, Equirectangular2CubeService equirectangular2CubeServ, Dust3rService dust3rService) {
         this.storageService = service;
         this.projectRepository = projectRepository;
+        this.dust3rService = dust3rService;
         this.depthEstimateService = depthEstimateServ;
         this.thumbGenerateService = thumbGenerateServ;
         this.equirectangular2CubeService = equirectangular2CubeServ;
@@ -92,7 +99,24 @@ public class UploadResourcesController {
             try {
 
                 depthEstimateService.depthEstimate(prefix, imageName);
-                equirectangular2CubeService.equirectangular2Cube(prefix,imageName);
+                equirectangular2CubeService.equirectangular2Cube(prefix, imageName);
+                if (counter.incrementAndGet() >= 2) {
+                    //equirectangular2cube
+                    try {
+                        //call the dust3r service
+                        Boolean dust3rResult = dust3rService.dust3r(prefix);
+                        if (dust3rResult == false) {
+                            log.error("dust3rResult is false");
+                        }
+                        while (!dust3rResult) {
+                            dust3rService.dust3r(prefix);
+                        }
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                }
 
             } catch (Exception ex) {
 
@@ -378,6 +402,14 @@ public class UploadResourcesController {
 
         }
 
+        try {
+            dust3rService.dust3r(prefix);
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+
+        }
+
+
         return "upload configFile success";
     }
 
@@ -404,6 +436,21 @@ public class UploadResourcesController {
 
         }
         return "update configFile success";
+    }
+
+    @GetMapping("/dust3r/{userId}/{projectId}")
+    String dust3r(@PathVariable("userId") String userId, @PathVariable("projectId") String projectId) {
+        log.info("Dust3r service\tProjectId:" + projectId);
+        String prefix = userId + "/" + projectId + "/";
+
+        try{
+            dust3rService.dust3r(prefix);
+        }catch(Exception e){
+            System.out.println(e.getMessage());
+            return "dust3r service fail";
+        }
+        return "dust3r service success";
+
     }
 
 

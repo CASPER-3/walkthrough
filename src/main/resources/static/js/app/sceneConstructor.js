@@ -148,9 +148,9 @@ function constructSkybox(parentObject, skyboxConfigArr, texturesMap) {
         skyBox.rotation.y = skyboxConfig["rotation"].y;
         skyBox.rotation.z = skyboxConfig["rotation"].z;
 
-        skyBox.rotateX(0.5*Math.PI)
-        skyBox.rotateZ(0.5*Math.PI)
-        skyBox.rotateZ(Math.PI)
+        // skyBox.rotateX(0.5*Math.PI)
+        // skyBox.rotateZ(0.5*Math.PI)
+        // skyBox.rotateZ(Math.PI)
 
         skyBox.position.copy(new THREE.Vector3(skyboxConfig["position"].x, skyboxConfig["position"].y, skyboxConfig["position"].z));
         skyBox.name = skyboxConfig["name"];
@@ -220,7 +220,11 @@ function constructModel(parentObject, modelConfigArr) {
         if (modelConfig["type"] && modelConfig["type"] === 'ply') {
             console.log("load ply model")
             loadPLYModel(parentObject, modelConfig);
-        } else {
+        }else if(modelConfig["type"] && modelConfig["type"] === 'mtl'){
+            console.log("load mtl model");
+            loadModel(parentObject,manager,modelConfig);
+        }
+        else {
             loadOBJModel(parentObject, manager, modelConfig);
         }
 

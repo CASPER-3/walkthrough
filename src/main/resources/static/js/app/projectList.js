@@ -72,6 +72,7 @@ const App = () => {
                         alt="logo"
                         src={imageError[item.projectId]?defaultPicUrl:"/project/getEditSources/" + userId + "/" + item.configurationId + "/thumb.jpg"}
                         onError={()=>{handleImageError(item.projectId)}}
+                        key = {"thumb_"+item.projectId}
                     />]
                 }
             >

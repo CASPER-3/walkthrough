@@ -1,5 +1,7 @@
 package org.panorama.walkthrough.service.algorithm;
 
+import java.util.List;
+
 /**
  * @author WangZx
  * @version 1.0
@@ -8,5 +10,15 @@ package org.panorama.walkthrough.service.algorithm;
  * @createTime 17:04
  * @Description TODO
  */
-public class Dust3rService {
+public abstract class Dust3rService {
+
+
+    public Boolean dust3r(String rootDir){
+
+        return doDust3r(rootDir);
+
+    }
+
+    abstract Boolean doDust3r(String rootDir);
+
 }

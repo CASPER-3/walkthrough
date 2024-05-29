@@ -61,7 +61,9 @@ function constructPointCloud(entityGroup, pointCloudConfigArr) {
 
         const pcdPath = pointCloudConfig['url']
         loader.load(pcdPath, (geometry) => {
-            const material = new THREE.PointsMaterial({size: 0.001, vertexColors: true})
+            const material = new THREE.PointsMaterial({size: 0.001, vertexColors: true});
+            //Increase brightness
+            material.color.setRGB(2,2,2);
             console.log("load pyl geometry",geometry)
             const object = new THREE.Points(geometry, material)
             object.customId = pointCloudConfig["id"];

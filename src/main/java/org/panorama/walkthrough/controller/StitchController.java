@@ -35,8 +35,8 @@ import java.nio.file.Paths;
 @Controller
 public class StitchController {
 
-    @Value("#{'${customer.work-dir}' ?: systemProperties['user.dir']}")
-    private String WORK_DIR;
+
+    private final String WORK_DIR = "D:\\Repository\\2023\\walkthrough\\";
     private static final String CONFIG_FILE = "image_list.txt";
     private ImgStitchService imgStitchService;
 
@@ -53,6 +53,7 @@ public class StitchController {
     @PostMapping("upload")
     @ResponseBody
     public ResponseEntity upload(@RequestPart("file") MultipartFile multipartFile, HttpServletRequest request) {
+        log.info("workingDir:"+WORK_DIR);
         HttpSession session = request.getSession();
         User user = (User) session.getAttribute("user");
         String fileName = multipartFile.getOriginalFilename();

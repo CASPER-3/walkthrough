@@ -28,7 +28,7 @@ import {nanoid} from "/js/build/nanoid.js";
 const configurationFileId = sessionStorage.getItem("configurationFileId");
 const userId = sessionStorage.getItem("userId");
 const projectConfigurationUrl = "/project/getEditSources/" + userId + "/" + configurationFileId + "/" + "projectConfig.json";
-
+const extrinsicsUrl = "/project/getEditSources/" + userId + "/" + configurationFileId + "/" + "extrinsics_B.txt";
 
 let container = document.getElementById("sceneContainer");
 
@@ -820,7 +820,7 @@ layui.use('slider', function () {
         setTips: (value) => {
             return value;
         },
-        min: 0,
+        min: -360,
         max: 360,
         change: (value) => {
             changeObjectRotation('X', value);
@@ -831,7 +831,7 @@ layui.use('slider', function () {
         setTips: (value) => {
             return value;
         },
-        min: 0,
+        min: -360,
         max: 360,
         change: (value) => {
             changeObjectRotation('Y', value);
@@ -842,7 +842,7 @@ layui.use('slider', function () {
         setTips: (value) => {
             return value;
         },
-        min: 0,
+        min: -360,
         max: 360,
         change: (value) => {
             changeObjectRotation('Z', value);
@@ -870,40 +870,89 @@ layui.use(['dropdown', 'jquery', 'layer'], () => {
     dropdown.on('click(sceneEditMenu)', (options) => {
         let othis = $(this);
         if (options.id === 1) {
-            // 添加模型
+            // 点位拼接
 
-            // let sceneConfig = JSON.stringify(scene.toJSON());
-            // const a = document.createElement("a");
-            // a.href = window.URL.createObjectURL(new Blob([sceneConfig], {type: "application/json"}));
-            // a.download = "project.json";
-            // a.click();
-            // console.log(sceneConfig);
+            fetch(extrinsicsUrl, {cache: "reload"})
+                .then((response) => response.text())
+                .then((text) => {
+                    const content = text;
+                    console.log(content);
+                    const lines = content.split('\n');
+                    const matrixCount = parseInt(lines[0]);
 
-            // updateObjectMatrix(scene);
+                    let currentIndex = 1; // 当前处理的行索引
 
-            scene.updateMatrixWorld();
-            scene.traverse((object) => {
-                if (object.isMesh) {
-                    object.updateMatrixWorld();
-                    object.updateWorldMatrix();
-                }
-            });
+                    if (entityArr === null) {
+                        entityArr = getAllPointClouds(entityGroup);
+                    }
+
+                    console.log("entityArr", entityArr);
+
+                    let matrix_arr = [];
+
+                    // 循环读取每个矩阵的内容
+                    for (let i = 0; i < matrixCount; i++) {
+                        const matrix = [];
+                        let transformMatrix = new THREE.Matrix4();
+                        const matrix_text = lines.slice(currentIndex, currentIndex + 4);
+
+                        for (let j = 0; j < 4; ++j) {
+                            const row = matrix_text[j];
+                            const row_array = row.split(/\s+/)
+                            matrix.push(row_array);
+                        }
+
+                        console.log(matrix);
+                        transformMatrix.set(
+                            1 * matrix[0][0], 1 * matrix[0][1], 1 * matrix[0][2], 1 * matrix[0][3],
+                            1 * matrix[1][0], 1 * matrix[1][1], 1 * matrix[1][2], 1 * matrix[1][3],
+                            1 * matrix[2][0], 1 * matrix[2][1], 1 * matrix[2][2], 1 * matrix[2][3],
+                            1 * matrix[3][0], 1 * matrix[3][1], 1 * matrix[3][2], 1 * matrix[3][3]
+                        )
+
+                        console.log(transformMatrix)
+                        console.log(matrixCount - 1 - i)
+                        console.log(entityArr[matrixCount - i - 1]);
+                        matrix_arr.push(transformMatrix);
+                        currentIndex += 4
+
+                    }
+
+                    let dummyMatrix = new THREE.Matrix4();
+
+                    for (let i = 0; i < matrix_arr.length; ++i) {
+
+                        entityArr[i].position.set(0,0,0);
+                        entityArr[i].rotation.set(0, -3.14, -3.14);
+                        let custom_idx = entityArr[i].customIndex;
+                        console.log("custom_idx", custom_idx);
+
+                        // entityArr[i].rotation.set(0,0,0);
+                        entityArr[i].applyMatrix4(matrix_arr[custom_idx]);
+                        entityArr[i].updateMatrixWorld(true);
+                        //amendment the rotation between the dust3r and vr systems
+                        entityArr[i].rotateY(-Math.PI)
+                        entityArr[i].rotateZ(-Math.PI)
+
+                        // entityArr[i].rotateZ(-3.14)
+                        // entityArr[i].rotateY(3.14)
+
+                    }
+                })
 
 
-            let sceneCopy = scene.clone();
-
-            removeOtherObject(sceneCopy);
-
-            removeTexture(sceneCopy);
-
-            let sceneConfig = JSON.stringify(sceneCopy.toJSON());
-            const a = document.createElement("a");
-            a.href = window.URL.createObjectURL(new Blob([sceneConfig], {type: "application/json"}));
-            a.download = "sceneCopy.json";
-            a.click();
         } else if (options.id === 2) {
             // 添加场景
-            showAddSkyboxModal();
+            // showAddSkyboxModal();
+
+            // 使用dust3r拼接点位
+            axios.get("/dust3r/"+userId+"/"+configurationFileId).then(
+
+                res=>{
+                    console.log(res);
+                }
+
+            )
 
         } else if (options.id === 3) {
             // 添加热点
@@ -986,7 +1035,7 @@ layui.use(['dropdown', 'jquery', 'layer'], () => {
 
             //renderer.outputEncoding = THREE.sRGBEncoding;
 
-            exportGLTF(scene);
+            // exportGLTF(scene);
             // let sceneConfig = JSON.stringify(scene);
             // const a = document.createElement("a");
             // a.href = window.URL.createObjectURL(new Blob([sceneConfig], {type: "application/json"}));
@@ -994,6 +1043,13 @@ layui.use(['dropdown', 'jquery', 'layer'], () => {
             // a.click();
             // showInfo(scene);
             // exportJsonTree(scene);
+            if (entityArr === null) {
+                entityArr = getAllPointClouds(entityGroup);
+            }
+
+            for (let i = 0; i < entityArr.length; ++i) {
+                entityArr[i].rotation.set(0, -3.14, -3.14);
+            }
 
         } else if (options.id === 13) {
             // 锁定物体
@@ -1095,12 +1151,9 @@ layui.use(['dropdown', 'jquery', 'layer'], () => {
                         const matrix_text = lines.slice(currentIndex, currentIndex + 4);
 
                         for (let j = 0; j < 4; ++j) {
-
                             const row = matrix_text[j];
                             const row_array = row.split(/\s+/)
                             matrix.push(row_array);
-
-
                         }
 
                         console.log(matrix);
@@ -1112,22 +1165,31 @@ layui.use(['dropdown', 'jquery', 'layer'], () => {
                         )
 
                         console.log(transformMatrix)
-
                         console.log(matrixCount - 1 - i)
                         console.log(entityArr[matrixCount - i - 1]);
-
                         matrix_arr.push(transformMatrix);
-
-
                         currentIndex += 4
-
 
                     }
 
-                    for(let i = 0;i<matrix_arr.length; ++i){
+                    let dummyMatrix = new THREE.Matrix4();
+
+                    for (let i = 0; i < matrix_arr.length; ++i) {
+
+                        entityArr[i].rotation.set(0, -3.14, -3.14);
                         let custom_idx = entityArr[i].customIndex;
+                        console.log("custom_idx", custom_idx);
+                        // entityArr[i].position.set(0,0,0);
+                        // entityArr[i].rotation.set(0,0,0);
                         entityArr[i].applyMatrix4(matrix_arr[custom_idx]);
                         entityArr[i].updateMatrixWorld(true);
+                        //amendment the rotation between the dust3r and vr systems
+                        entityArr[i].rotateY(-Math.PI)
+                        entityArr[i].rotateZ(-Math.PI)
+
+                        // entityArr[i].rotateZ(-3.14)
+                        // entityArr[i].rotateY(3.14)
+
                     }
                 };
 
