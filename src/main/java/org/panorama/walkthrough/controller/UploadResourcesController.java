@@ -3,6 +3,7 @@ package org.panorama.walkthrough.controller;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import lombok.RequiredArgsConstructor;
 import org.panorama.walkthrough.model.Project;
 import org.panorama.walkthrough.repositories.ProjectRepository;
 import org.panorama.walkthrough.service.algorithm.DepthEstimateService;
@@ -10,6 +11,7 @@ import org.panorama.walkthrough.service.algorithm.Dust3rService;
 import org.panorama.walkthrough.service.algorithm.Equirectangular2CubeService;
 import org.panorama.walkthrough.service.algorithm.ThumbGenerateService;
 import org.panorama.walkthrough.service.project.ProjectService;
+import org.panorama.walkthrough.service.resource.ResourceService;
 import org.panorama.walkthrough.service.storage.StorageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,36 +37,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @createTime 16:45
  */
 @RestController
+@RequiredArgsConstructor
 public class UploadResourcesController {
 
-    private static final Logger log = LoggerFactory.getLogger(UploadResourcesController.class);
-
-    @Autowired
-    ProjectService projectService;
-
-    ProjectRepository projectRepository;
-
-    private final StorageService storageService;
-
-    private final DepthEstimateService depthEstimateService;
-
-    private final Dust3rService dust3rService;
-
-    private final ThumbGenerateService thumbGenerateService;
-
-    private final Equirectangular2CubeService equirectangular2CubeService;
-
-    private AtomicInteger counter = new AtomicInteger(0);
-
-    @Autowired
-    public UploadResourcesController(StorageService service, ProjectRepository projectRepository, DepthEstimateService depthEstimateServ, ThumbGenerateService thumbGenerateServ, Equirectangular2CubeService equirectangular2CubeServ, Dust3rService dust3rService) {
-        this.storageService = service;
-        this.projectRepository = projectRepository;
-        this.dust3rService = dust3rService;
-        this.depthEstimateService = depthEstimateServ;
-        this.thumbGenerateService = thumbGenerateServ;
-        this.equirectangular2CubeService = equirectangular2CubeServ;
-    }
+    private final ResourceService resourceService;
 
     /**
      * 前端创建项目页面 '添加场景' 调用的接口,将前端传入的全景图存储为文件,存储路径:项目工作路径/userData/projectResources/{userId}/{projectId}/{picId}
@@ -77,75 +53,9 @@ public class UploadResourcesController {
      */
     @PostMapping("/uploadPic/{userId}/{projectId}/{picId}")
     String uploadPic(@RequestParam("file") MultipartFile file, @PathVariable("userId") String userId, @PathVariable("projectId") String projectId, @PathVariable("picId") String picId) {
-        String fileName = file.getOriginalFilename();
-        log.info("Resources\t[Upload]\tPicture:" + fileName);
-        JSONObject statusInfo = new JSONObject();
-        statusInfo.put("code", 0);
-        statusInfo.put("msg", "upload success");
-        String prefix = userId + "/" + projectId + "/";
-        storageService.store(file, prefix, picId);
 
-        /**
-         *  判断是否为ERP全景图，是的话调用生成深度图服务
-         *  Wed,Oct18,2023
-         */
+        return resourceService.uploadPic(file,userId,projectId,picId);
 
-        String erpSuffix = picId.substring(picId.length() - 3);
-
-        if (erpSuffix.equals("erp")) {
-            String suffix = fileName.substring(fileName.lastIndexOf('.'));
-            String imageName = picId + suffix;
-
-            try {
-
-                depthEstimateService.depthEstimate(prefix, imageName);
-                equirectangular2CubeService.equirectangular2Cube(prefix, imageName);
-                if (counter.incrementAndGet() >= 2) {
-                    //equirectangular2cube
-                    try {
-                        //call the dust3r service
-                        Boolean dust3rResult = dust3rService.dust3r(prefix);
-                        if (dust3rResult == false) {
-                            log.error("dust3rResult is false");
-                        }
-                        while (!dust3rResult) {
-                            dust3rService.dust3r(prefix);
-                        }
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-
-                }
-
-            } catch (Exception ex) {
-
-                System.out.println(ex.getMessage());
-
-            }
-
-            /**
-             *  判断项目是否存在缩略图,没有的话调用生成缩略图服务
-             *  Tue,Mar12,2024
-             */
-            String rootLocation = storageService.getLocation();
-            Path path = Paths.get(rootLocation + '/' + prefix + "thumb.jpg");
-            if (!Files.exists(path)) {
-
-                try {
-
-                    thumbGenerateService.thumbGenerate(prefix, imageName);
-
-                } catch (Exception ex) {
-
-                    System.out.println(ex.getMessage());
-
-                }
-            }
-
-        }
-
-        return JSON.toJSONString(statusInfo);
     }
 
     /**
@@ -164,76 +74,7 @@ public class UploadResourcesController {
                      @PathVariable("userId") String userId, @PathVariable("projectId") String projectId,
                      @PathVariable("picId") String picId, @PathVariable("skyboxId") String skyboxId) {
 
-        log.info("Request\t[Post]/addSkybox\tpath:/" + userId + "/" + projectId + "/" + picId + "/" + skyboxId);
-        JSONObject statusInfo = new JSONObject();
-
-        String configurationFilePath = userId + "/" + projectId + "/" + "projectConfig.json";
-        byte[] configurationFile = storageService.readJsonFile(configurationFilePath);
-        if (configurationFile.length == 0) {
-            statusInfo.put("code", 1);
-            statusInfo.put("msg", "add skybox failed");
-        } else {
-            String fileName = file.getOriginalFilename();
-            String prefix = userId + "/" + projectId + "/";
-            String suffix = fileName.substring(fileName.lastIndexOf('.'));
-            String path = prefix + "projectConfig.json";
-            statusInfo.put("code", 0);
-            statusInfo.put("msg", "add skybox success");
-            statusInfo.put("sceneName", sceneName);
-            statusInfo.put("skyboxId", skyboxId);
-            statusInfo.put("textureUrl", "/project/getEditSources/" + userId + "/" + projectId + "/" + picId + suffix);
-            JSONObject configData = JSON.parseObject(configurationFile);
-            JSONObject sceneData = configData.getJSONObject("scene");
-            JSONArray skyboxData = sceneData.getJSONArray("skybox");
-            JSONArray texturesData = configData.getJSONArray("textures");
-
-            int offset = skyboxData.size();
-
-            JSONObject newSkybox = skyboxData.addObject();
-            JSONObject newTexture = texturesData.addObject();
-
-
-            newTexture.put("id", picId);
-            newTexture.put("name", sceneName);
-            newTexture.put("type", "skybox");
-            newTexture.put("url", "/project/getEditSources/" + userId + "/" + projectId + "/" + picId + suffix);
-
-            newSkybox.put("name", sceneName);
-            newSkybox.put("id", skyboxId);
-            newSkybox.put("texture", new String[]{picId});
-
-            JSONObject positionData = newSkybox.putObject("position");
-            positionData.put("x", 0);
-            positionData.put("y", 0);
-            positionData.put("z", offset);
-
-            JSONObject geometryScaleData = newSkybox.putObject("geometryScale");
-            geometryScaleData.put("x", 1);
-            geometryScaleData.put("y", 1);
-            geometryScaleData.put("z", -1);
-
-            JSONObject scaleData = newSkybox.putObject("scale");
-            scaleData.put("x", 1);
-            scaleData.put("y", 1);
-            scaleData.put("z", 1);
-
-            JSONObject rotationData = newSkybox.putObject("rotation");
-            rotationData.put("x", 0);
-            rotationData.put("y", 0);
-            rotationData.put("z", 0);
-            storageService.delete(path);
-            try {
-                storageService.store(file, prefix, picId);
-                storageService.store(configData.toJSONString(), prefix);
-            } catch (Exception ex) {
-
-                System.out.println(ex.getMessage());
-
-            }
-
-        }
-
-        return JSON.toJSONString(statusInfo);
+        return resourceService.addSkybox(file,sceneName,userId,projectId,picId,skyboxId);
     }
 
     /**
@@ -253,82 +94,7 @@ public class UploadResourcesController {
                    @PathVariable("userId") String userId, @PathVariable("projectId") String projectId,
                    @PathVariable("picId") String picId, @PathVariable("naviId") String naviId, @PathVariable("skyboxId") String skyboxId) {
 
-        log.info("Request\t[Post]/addNavi\tpath:/" + userId + "/" + projectId + "/" + picId + "/" + naviId);
-        JSONObject statusInfo = new JSONObject();
-
-        String configurationFilePath = userId + "/" + projectId + "/" + "projectConfig.json";
-        byte[] configurationFile = storageService.readJsonFile(configurationFilePath);
-        if (configurationFile.length == 0) {
-            statusInfo.put("code", 1);
-            statusInfo.put("msg", "add navi failed");
-        } else {
-            String fileName = file.getOriginalFilename();
-            String prefix = userId + "/" + projectId + "/";
-            String suffix = fileName.substring(fileName.lastIndexOf('.'));
-            String path = prefix + "projectConfig.json";
-            statusInfo.put("code", 0);
-            statusInfo.put("msg", "add navi success");
-            statusInfo.put("naviName", naviName);
-            statusInfo.put("naviId", naviId);
-            statusInfo.put("textureUrl", "/project/getEditSources/" + userId + "/" + projectId + "/" + picId + suffix);
-            statusInfo.put("map", skyboxId);
-            JSONObject configData = JSON.parseObject(configurationFile);
-            JSONObject sceneData = configData.getJSONObject("scene");
-            JSONArray skyboxData = sceneData.getJSONArray("skybox");
-            JSONArray naviData = sceneData.getJSONArray("navi");
-            JSONArray texturesData = configData.getJSONArray("textures");
-            Map<String, JSONObject> skyboxMap = new HashMap<>();
-            for (int i = 0; i < skyboxData.size(); ++i) {
-                skyboxMap.put(skyboxData.getJSONObject(i).getString("id"), skyboxData.getJSONObject(i));
-            }
-
-
-            JSONObject newNavi = naviData.addObject();
-            JSONObject newTexture = texturesData.addObject();
-
-
-            newTexture.put("id", picId);
-            newTexture.put("name", naviName);
-            newTexture.put("type", "navi");
-            newTexture.put("url", "/project/getEditSources/" + userId + "/" + projectId + "/" + picId + suffix);
-
-            newNavi.put("name", naviName);
-            newNavi.put("id", naviId);
-            newNavi.put("texture", picId);
-            newNavi.put("map", skyboxId);
-
-            JSONObject positionData = newNavi.putObject("position");
-            JSONObject naviMapSkybox = skyboxMap.get(skyboxId);
-            positionData.put("x", naviMapSkybox.getJSONObject("position").getIntValue("x"));
-            positionData.put("y", naviMapSkybox.getJSONObject("position").getIntValue("y") - naviMapSkybox.getJSONObject("scale").getIntValue("y") / 2);
-            positionData.put("z", naviMapSkybox.getJSONObject("position").getIntValue("z"));
-
-            JSONObject geometryScaleData = newNavi.putObject("geometryScale");
-            geometryScaleData.put("x", -1);
-            geometryScaleData.put("y", 1);
-            geometryScaleData.put("z", 1);
-
-            JSONObject scaleData = newNavi.putObject("scale");
-            scaleData.put("x", 1);
-            scaleData.put("y", 1);
-            scaleData.put("z", 1);
-
-            JSONObject rotationData = newNavi.putObject("rotation");
-            rotationData.put("x", 1.5707963267948966);
-            rotationData.put("y", 0);
-            rotationData.put("z", 0);
-            storageService.delete(path);
-            try {
-                storageService.store(file, prefix, picId);
-                storageService.store(configData.toJSONString(), prefix);
-            } catch (Exception ex) {
-
-                System.out.println(ex.getMessage());
-
-            }
-
-        }
-        return JSON.toJSONString(statusInfo);
+        return resourceService.addNavi(file,naviName,userId,projectId,picId,naviId,skyboxId);
 
     }
 
@@ -344,15 +110,7 @@ public class UploadResourcesController {
     @PostMapping("/uploadModel/{userId}/{projectId}/{modelId}")
     String uploadModel(@RequestParam("file") MultipartFile file, @PathVariable("userId") String userId, @PathVariable("projectId") String projectId, @PathVariable("modelId") String modelId) {
 
-        String fileName = file.getOriginalFilename();
-        log.info("Resources\t[Upload]\tSpaceModel:" + fileName);
-        JSONObject statusInfo = new JSONObject();
-        statusInfo.put("code", 0);
-        statusInfo.put("msg", "upload success");
-        String prefix = userId + "/" + projectId + "/";
-        storageService.store(file, prefix, modelId);
-
-        return JSON.toJSONString(statusInfo);
+        return resourceService.uploadModel(file,userId,projectId,modelId);
 
     }
 
@@ -367,50 +125,7 @@ public class UploadResourcesController {
     @PostMapping("/uploadConfigFile/{userId}/{projectId}")
     String uploadConfigFile(@RequestBody String configFile, @PathVariable("userId") String userId, @PathVariable("projectId") String projectId) {
 
-        String prefix = userId + "/" + projectId + "/";
-        log.info("Request\t[Post]/uploadConfigFile\tuserId:" + userId + " projectId:" + projectId);
-        log.info("Resources\t[Upload]\t[Project Configuration File Create]\tID:" + projectId);
-        JSONObject projectConfig = JSON.parseObject(configFile);
-        JSONObject metaInfo = projectConfig.getJSONObject("metadata");
-
-
-        //projectService.addProject();
-        Project project = new Project();
-
-        project.setProjectName(metaInfo.getString("name"));
-        project.setUserId(metaInfo.getLong("userId"));
-        project.setConfigFileId(metaInfo.getString("id"));
-        project.setProjectPath(metaInfo.getString("path"));
-        project.setProfile(metaInfo.getString("description"));
-        project.setStatus(0);
-        project.setCreationTime(new Date(System.currentTimeMillis()));
-        try {
-            project = projectRepository.save(project);
-
-            Long dbProjectId = project.getProjectId();
-            log.info("Project\t[ADD]    ProjectId:" + dbProjectId + " userId:" + project.getUserId());
-            int endPos = configFile.indexOf("projectId");
-            StringBuffer strBuffer = new StringBuffer();
-            strBuffer.append(configFile.substring(0, endPos + 11));
-            strBuffer.append(dbProjectId);
-            strBuffer.append(configFile.substring(endPos + 13));
-
-            storageService.store(strBuffer.toString(), prefix);
-        } catch (Exception ex) {
-
-            System.out.println(ex.getMessage());
-
-        }
-
-        try {
-            dust3rService.dust3r(prefix);
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-
-        }
-
-
-        return "upload configFile success";
+        return resourceService.uploadConfigFile(configFile,userId,projectId);
     }
 
     /**
@@ -423,35 +138,12 @@ public class UploadResourcesController {
      */
     @PostMapping("/updateConfigFile/{userId}/{projectId}")
     String updateConfigFile(@RequestBody String configFile, @PathVariable("userId") String userId, @PathVariable("projectId") String projectId) {
-        log.info("Resources\t[Upload]\t[Project Configuration File Update]\tProjectId:" + projectId);
-        String prefix = userId + "/" + projectId + "/";
-        String path = prefix + "projectConfig.json";
-        storageService.delete(path);
-
-        try {
-            storageService.store(configFile, prefix);
-        } catch (Exception ex) {
-
-            System.out.println(ex.getMessage());
-
-        }
-        return "update configFile success";
+        return resourceService.updateConfigFile(configFile,userId,projectId);
     }
 
     @GetMapping("/dust3r/{userId}/{projectId}")
     String dust3r(@PathVariable("userId") String userId, @PathVariable("projectId") String projectId) {
-        log.info("Dust3r service\tProjectId:" + projectId);
-        String prefix = userId + "/" + projectId + "/";
-
-        try{
-            dust3rService.dust3r(prefix);
-        }catch(Exception e){
-            System.out.println(e.getMessage());
-            return "dust3r service fail";
-        }
-        return "dust3r service success";
-
+       return resourceService.predictPosition(userId,projectId);
     }
-
 
 }
