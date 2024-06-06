@@ -1,33 +1,10 @@
 package org.panorama.walkthrough.controller;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
 import lombok.RequiredArgsConstructor;
-import org.panorama.walkthrough.model.Project;
-import org.panorama.walkthrough.repositories.ProjectRepository;
-import org.panorama.walkthrough.service.algorithm.DepthEstimateService;
-import org.panorama.walkthrough.service.algorithm.Dust3rService;
-import org.panorama.walkthrough.service.algorithm.Equirectangular2CubeService;
-import org.panorama.walkthrough.service.algorithm.ThumbGenerateService;
-import org.panorama.walkthrough.service.project.ProjectService;
 import org.panorama.walkthrough.service.resource.ResourceService;
-import org.panorama.walkthrough.service.storage.StorageService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-
 
 /**
  * @author WangZx
@@ -142,8 +119,12 @@ public class UploadResourcesController {
     }
 
     @GetMapping("/dust3r/{userId}/{projectId}")
-    String dust3r(@PathVariable("userId") String userId, @PathVariable("projectId") String projectId) {
-       return resourceService.predictPosition(userId,projectId);
+    ResponseEntity<String> dust3r(@PathVariable("userId") String userId, @PathVariable("projectId") String projectId) {
+       Boolean res = resourceService.predictPosition(userId,projectId);
+       if(!res){
+           return ResponseEntity.badRequest().body("点位预测算法运行失败");
+       }
+       return ResponseEntity.ok("点位预测成功");
     }
 
 }

@@ -949,10 +949,18 @@ layui.use(['dropdown', 'jquery', 'layer'], () => {
             axios.get("/dust3r/"+userId+"/"+configurationFileId).then(
 
                 res=>{
-                    console.log(res);
+
+                    if(res.status===200){
+                        antd.message.success(res.data);
+                    }else{
+                        antd.message.warn(res.data);
+                    }
                 }
 
-            )
+            ).catch(error => {
+                console.error('Error:', error);
+                antd.message.error(error.response.data);
+            });
 
         } else if (options.id === 3) {
             // 添加热点

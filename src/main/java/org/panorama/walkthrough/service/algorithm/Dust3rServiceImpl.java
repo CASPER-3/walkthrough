@@ -26,16 +26,17 @@ public class Dust3rServiceImpl extends Dust3rService {
 
             Process process = Runtime.getRuntime().exec(command);
 
-            StringBuilder sb = new StringBuilder();
-            BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String read;
-
-            while ((read = br.readLine()) != null) {
-                sb.append(read);
-            }
-
-            br.close();
-            System.out.println(sb.toString());
+//            StringBuilder sb = new StringBuilder();
+//            BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
+//            String read;
+//
+//            while ((read = br.readLine()) != null) {
+//                sb.append(read+"\n");
+//
+//            }
+//
+//            br.close();
+//            System.out.println(sb.toString());
             return true;
 
         } catch (IOException e) {

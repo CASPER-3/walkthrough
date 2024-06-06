@@ -5,6 +5,7 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.panorama.walkthrough.grpc.GrpcClient;
 import org.panorama.walkthrough.model.Project;
 import org.panorama.walkthrough.repositories.ProjectRepository;
 import org.panorama.walkthrough.service.algorithm.DepthEstimateService;
@@ -42,8 +43,9 @@ public class ResourceServiceImpl implements ResourceService {
     private final Dust3rService dust3rService;
     private final ThumbGenerateService thumbGenerateService;
     private final ProjectRepository projectRepository;
+    private final GrpcClient grpcClient = new GrpcClient("localhost", 50055);
 
-    private static final ThreadLocal<AtomicInteger> counter = ThreadLocal.withInitial(() -> new AtomicInteger(0));
+    AtomicInteger counter = new AtomicInteger(0);
 
     @Override
     public String uploadPic(MultipartFile file, String userId, String projectId, String picId) {
@@ -72,7 +74,8 @@ public class ResourceServiceImpl implements ResourceService {
 
                 depthEstimateService.depthEstimate(prefix, imageName);
                 equirectangular2CubeService.equirectangular2Cube(prefix, imageName);
-                if (counter.get().incrementAndGet() >= 2) {
+                int currentValue = counter.incrementAndGet();
+                if (currentValue >= 2) {
                     //equirectangular2cube
                     try {
                         //call the dust3r service
@@ -356,18 +359,30 @@ public class ResourceServiceImpl implements ResourceService {
     }
 
     @Override
-    public String predictPosition(String userId, String projectId) {
-
+    public Boolean predictPosition(String userId, String projectId) {
+        String rootDir = userId + "/" + projectId + "/";
+        String pathPrefix = "../../../../../../../userData/projectResources/";
+        String fullRootDir = pathPrefix + rootDir + "dust3rInput/";
         log.info("Dust3r service\tProjectId:" + projectId);
-        String prefix = userId + "/" + projectId + "/";
 
         try{
-            dust3rService.dust3r(prefix);
-        }catch(Exception e){
-            System.out.println(e.getMessage());
-            return "dust3r service fail";
+            String res = grpcClient.compute(fullRootDir);
+            return true;
+
+        }catch(Exception ex){
+            log.warn("grpc called failed:"+ex.getMessage());
+
         }
-        return "dust3r service success";
+
+        return false;
+
+//        try{
+//            dust3rService.dust3r(prefix);
+//        }catch(Exception e){
+//            System.out.println(e.getMessage());
+//            return "dust3r service fail";
+//        }
+//        return "dust3r service success";
 
     }
 }

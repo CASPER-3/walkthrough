@@ -28,5 +28,5 @@ public interface ResourceService {
 
     String updateConfigFile(String configFile,  String userId,  String projectId);
 
-    String predictPosition(String userId, String projectId);
+    Boolean predictPosition(String userId, String projectId);
 }
