@@ -200,6 +200,7 @@ function updateSkyboxInfo(scene, sceneConfig) {
     const skyboxArr = getSkyboxArr(scene);
     console.log(skyboxArr, "skyboxArr");
     const skyboxMap = genObjectMap(skyboxArr);
+    console.log(skyboxMap,"skyboxMap")
     for (const skyboxConfig of skyboxConfigArr) {
         let skybox = skyboxMap.get(skyboxConfig["id"]);
         skyboxConfig["rotation"].x = skybox.rotation.x;
