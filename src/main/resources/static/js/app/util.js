@@ -134,14 +134,18 @@ export function getPointCloudArr(scene){
  */
 function getObjectArr(scene, groupName) {
 
+    console.log(scene,"scene");
+    let resArr = [];
     for (let obj3d of scene.children) {
         if (obj3d.name === "sceneEntity") {
             for (let childGroup of obj3d.children) {
-                if (childGroup.name === groupName)
-                    return childGroup.children;
+                if (childGroup.name === groupName){
+                    resArr.push(childGroup.children);
+                }
             }
         }
     }
+    return resArr;
 }
 
 /**
