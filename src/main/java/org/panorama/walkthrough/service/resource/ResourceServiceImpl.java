@@ -45,7 +45,7 @@ public class ResourceServiceImpl implements ResourceService {
     private final ProjectRepository projectRepository;
     private final GrpcClient grpcClient = new GrpcClient("localhost", 50055);
 
-    AtomicInteger counter = new AtomicInteger(0);
+    private final static AtomicInteger counter = new AtomicInteger(0);
 
     @Override
     public String uploadPic(MultipartFile file, String userId, String projectId, String picId) {
@@ -358,6 +358,13 @@ public class ResourceServiceImpl implements ResourceService {
         return "update configFile success";
     }
 
+    /**
+     * Grpc调用dust3r 点位预测服务
+     *
+     * @param userId
+     * @param projectId
+     * @return
+     */
     @Override
     public Boolean predictPosition(String userId, String projectId) {
         String rootDir = userId + "/" + projectId + "/";

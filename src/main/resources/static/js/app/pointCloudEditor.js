@@ -796,6 +796,21 @@ const AddNaviContent = () => {
 }
 
 
+// const SpinLoader = () => {
+//     const [spinning, setSpinning] = React.useState(false);
+//     const [percent, setPercent] = React.useState(0);
+//     const showLoader = () => {
+//         setSpinning(true);
+//
+//     };
+//     return (
+//         <>
+//             <antd.Button onClick={showLoader}>Show fullscreen</antd.Button>
+//             <antd.Spin spinning={spinning}  fullscreen={"true"} />
+//         </>
+//     );
+// };
+
 layui.use('slider', function () {
     var slider = layui.slider;
 
@@ -944,6 +959,7 @@ layui.use(['dropdown', 'jquery', 'layer'], () => {
         } else if (options.id === 2) {
             // 添加场景
             // showAddSkyboxModal();
+
 
             // 使用dust3r拼接点位
             axios.get("/dust3r/"+userId+"/"+configurationFileId).then(
@@ -1215,6 +1231,7 @@ root.render(
     <div>
         <AddSkyboxContent></AddSkyboxContent>
         <AddNaviContent></AddNaviContent>
+        <SpinLoader></SpinLoader>
     </div>
 );
 

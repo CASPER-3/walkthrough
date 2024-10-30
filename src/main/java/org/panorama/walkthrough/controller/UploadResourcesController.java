@@ -118,6 +118,13 @@ public class UploadResourcesController {
         return resourceService.updateConfigFile(configFile,userId,projectId);
     }
 
+    /**
+     * 点位预测服务接口
+     *
+     * @param userId
+     * @param projectId
+     * @return
+     */
     @GetMapping("/dust3r/{userId}/{projectId}")
     ResponseEntity<String> dust3r(@PathVariable("userId") String userId, @PathVariable("projectId") String projectId) {
        Boolean res = resourceService.predictPosition(userId,projectId);

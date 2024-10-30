@@ -9,12 +9,15 @@
 <body>
 <div class="layui-layout layui-layout-admin">
     <div class="layui-header">
-        <div class="layui-logo layui-hide-xs layui-bg-black">用户项目管理</div>
+        <div class="layui-logo layui-hide-xs layui-bg-black">
+            <img src="/bupt.jpg" alt="平台Logo" style="height: 100%; max-height: 60px;">
+            VR全景管理平台
+        </div>
         <!-- 头部区域（可配合layui 已有的水平导航） -->
         <ul class="layui-nav layui-layout-right">
             <li class="layui-nav-item layui-hide layui-show-md-inline-block">
                 <a href="javascript:;">
-                    <img src="/Solar.png" class="layui-nav-img" th:text="${session.user.getUserName()}">
+                    <img src="/bupt.jpg" class="layui-nav-img" th:text="${session.user.getUserName()}">
                 </a>
                 <dl class="layui-nav-child">
                     <dd><a href="">Your Profile</a></dd>

@@ -33,8 +33,4 @@ public class GrpcClient {
     public void shutdown() throws InterruptedException {
         channel.shutdown();
     }
-
-
-
-
 }

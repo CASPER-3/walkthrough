@@ -255,7 +255,9 @@ function updateModelInfo(scene, sceneConfig) {
     const spaceModelArr = getModelArr(scene);
     console.log(spaceModelArr, "spaceModelArr");
     const spaceModelMap = genObjectMap(spaceModelArr);
+    console.log(spaceModelMap,"modelMap")
     for (let modelConfig of modelConfigArr) {
+        console.log(modelConfig,"modelConfig");
         const spaceModel = spaceModelMap.get(modelConfig["id"]);
 
         modelConfig["position"].x = spaceModel.position.x;
