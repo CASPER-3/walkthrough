@@ -703,6 +703,11 @@ function lockObject() {
     }
 }
 
+//隐藏场景全景图和热点
+function hideHotspot(){
+
+}
+
 // 解锁选中的物体
 function unlockObject() {
 

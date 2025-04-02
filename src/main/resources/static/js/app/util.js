@@ -136,16 +136,18 @@ function getObjectArr(scene, groupName) {
 
     console.log(scene,"scene");
     if(groupName==="mtlModel"){
+        console.log("getObjectArr-mtlModel")
         let resArr = [];
         for (let obj3d of scene.children) {
             if (obj3d.name === "sceneEntity") {
                 for (let childGroup of obj3d.children) {
                     if (childGroup.name === groupName){
-                        resArr.push(childGroup.children)
+                        resArr.push(childGroup.children[0])
                     }
                 }
             }
         }
+        console.log("resArr",resArr);
         return resArr;
     }
     for (let obj3d of scene.children) {
