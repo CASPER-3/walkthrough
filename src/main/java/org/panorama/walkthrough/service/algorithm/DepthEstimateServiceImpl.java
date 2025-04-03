@@ -1,6 +1,7 @@
 package org.panorama.walkthrough.service.algorithm;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -56,6 +57,11 @@ public class DepthEstimateServiceImpl extends DepthEstimateService {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    Boolean doDepthEstimate(MultipartFile file) throws IOException {
+        return null;
     }
 
     private static String getCommand(String imageDir, String imageName) {

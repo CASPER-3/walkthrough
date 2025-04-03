@@ -22,7 +22,13 @@ public abstract class DepthEstimateService {
 
     }
 
+    public Boolean depthEstimate(MultipartFile file) throws IOException {
+        return doDepthEstimate(file);
+    }
+
     abstract Boolean doDepthEstimate(String imageDir,String imgName);
+
+    abstract Boolean doDepthEstimate(MultipartFile file) throws IOException;
 
 
 }

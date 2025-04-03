@@ -13,6 +13,7 @@ import org.panorama.walkthrough.service.algorithm.Dust3rService;
 import org.panorama.walkthrough.service.algorithm.Equirectangular2CubeService;
 import org.panorama.walkthrough.service.algorithm.ThumbGenerateService;
 import org.panorama.walkthrough.service.storage.StorageService;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -38,6 +39,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ResourceServiceImpl implements ResourceService {
 
     private final StorageService storageService;
+    @Qualifier("depthEstimateMQServiceImpl")
     private final DepthEstimateService depthEstimateService;
     private final Equirectangular2CubeService equirectangular2CubeService;
     private final Dust3rService dust3rService;
@@ -72,7 +74,7 @@ public class ResourceServiceImpl implements ResourceService {
 
             try {
 
-                depthEstimateService.depthEstimate(prefix, imageName);
+                depthEstimateService.depthEstimate(file);
                 equirectangular2CubeService.equirectangular2Cube(prefix, imageName);
                 int currentValue = counter.incrementAndGet();
                 if (currentValue >= 2) {

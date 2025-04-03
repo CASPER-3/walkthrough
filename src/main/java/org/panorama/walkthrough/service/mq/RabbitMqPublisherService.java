@@ -1,0 +1,42 @@
+package org.panorama.walkthrough.service.mq;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+/**
+ * @author WangZx
+ * @version 1.0
+ * @className RabbitMqPublisherService
+ * @date 2025/4/3
+ * @createTime 16:27
+ * @Description RabbitMQ消息发布服务
+ */
+@Service
+@Slf4j
+public class RabbitMqPublisherService {
+
+    private final RabbitTemplate rabbitTemplate;
+    private static final String EXCHANGE_NAME = "image-exchange";
+    private static final String ROUTING_KEY = "image.upload";
+
+    public RabbitMqPublisherService(RabbitTemplate rabbitTemplate) {
+        this.rabbitTemplate = rabbitTemplate;
+    }
+
+    public void publishImage(MultipartFile file) throws IOException {
+        try{
+            byte[] imageData = file.getBytes();
+            rabbitTemplate.convertAndSend(EXCHANGE_NAME, ROUTING_KEY, imageData);
+            log.info("Published image " + file.getOriginalFilename());
+
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+}
