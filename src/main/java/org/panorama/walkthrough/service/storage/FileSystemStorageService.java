@@ -3,6 +3,7 @@ package org.panorama.walkthrough.service.storage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,7 +21,7 @@ import java.nio.file.Paths;
  * @date 2023/3/28
  * @createTime 10:50
  */
-
+@Primary
 @Service
 public class FileSystemStorageService implements StorageService {
 
