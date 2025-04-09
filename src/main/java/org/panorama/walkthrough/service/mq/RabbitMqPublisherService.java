@@ -22,7 +22,7 @@ import java.nio.file.Paths;
 public class RabbitMqPublisherService {
 
     private final RabbitTemplate rabbitTemplate;
-    private static final String EXCHANGE_NAME = "image-exchange";
+    private static final String EXCHANGE_NAME = "depth_estimation_exchange";
     private static final String ROUTING_KEY = "image.upload";
 
     public RabbitMqPublisherService(RabbitTemplate rabbitTemplate) {

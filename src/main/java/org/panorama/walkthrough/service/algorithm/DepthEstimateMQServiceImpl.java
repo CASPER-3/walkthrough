@@ -1,8 +1,8 @@
 package org.panorama.walkthrough.service.algorithm;
 
-import org.apache.tomcat.jni.File;
 import org.panorama.walkthrough.service.mq.RabbitMqPublisherService;
 
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,6 +16,7 @@ import java.io.IOException;
  * @createTime 15:23
  * @Description
  */
+@Primary
 @Service
 public class DepthEstimateMQServiceImpl extends DepthEstimateService {
 
