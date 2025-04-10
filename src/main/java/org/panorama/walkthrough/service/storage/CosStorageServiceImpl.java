@@ -1,6 +1,9 @@
 package org.panorama.walkthrough.service.storage;
 
 import com.qcloud.cos.COSClient;
+import com.qcloud.cos.exception.CosClientException;
+import com.qcloud.cos.exception.CosServiceException;
+import com.qcloud.cos.model.COSObject;
 import com.qcloud.cos.model.ObjectMetadata;
 import com.qcloud.cos.model.PutObjectRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -70,7 +73,7 @@ public class CosStorageServiceImpl implements StorageService {
     public void store(String str, String prefix) {
 
         try {
-            String storageKey = "panoramas/"+ prefix + "projectConfig.json";
+            String storageKey = "panoramas/" + prefix + "projectConfig.json";
             byte[] bytes = str.getBytes(StandardCharsets.UTF_8);
             InputStream inputStream = new ByteArrayInputStream(bytes);
 
@@ -91,7 +94,19 @@ public class CosStorageServiceImpl implements StorageService {
 
     @Override
     public InputStream getSource(String prefix, String simpleSourceName) throws Exception {
-        return null;
+        String storageKey = "panoramas/" + prefix + simpleSourceName;
+        try {
+            //先检查文件是否存在
+            ObjectMetadata metadata = cosClient.getObjectMetadata(bucketName, storageKey);
+
+            COSObject cosObject = cosClient.getObject(bucketName, storageKey);
+            return cosObject.getObjectContent();
+
+        } catch (CosServiceException e) {
+            throw new StorageException("COS获取资源异常" + e.getMessage(), e);
+        } catch (CosClientException e) {
+            throw new StorageException("COS客户端异常" + e.getMessage(), e);
+        }
     }
 
     @Override
