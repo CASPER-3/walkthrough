@@ -9,6 +9,7 @@ import com.qcloud.cos.model.PutObjectRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,6 +27,7 @@ import java.nio.file.Files;
  * @createTime 16:31
  * @Description 腾讯云oss上传工具类
  */
+@Primary
 @Service
 @Slf4j
 public class CosStorageServiceImpl implements StorageService {
