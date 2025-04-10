@@ -21,7 +21,7 @@ import java.nio.file.Paths;
  * @date 2023/3/28
  * @createTime 10:50
  */
-@Primary
+
 @Service
 public class FileSystemStorageService implements StorageService {
 

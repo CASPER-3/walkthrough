@@ -39,9 +39,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RequiredArgsConstructor
 public class ResourceServiceImpl implements ResourceService {
 
-    @Qualifier("fileSystemStorageService")
+    @Qualifier("cosStorageServiceImpl")
     private final StorageService storageService;
-    private final CosStorageServiceImpl cosStorageService;
     @Qualifier("depthEstimateMQServiceImpl")
     private final DepthEstimateService depthEstimateService;
     private final Equirectangular2CubeService equirectangular2CubeService;
@@ -63,7 +62,6 @@ public class ResourceServiceImpl implements ResourceService {
         statusInfo.put("msg", "upload success");
         String prefix = userId + "/" + projectId + "/";
         storageService.store(file, prefix, picId);
-        cosStorageService.store(file, prefix, picId);
 
         /**
          *  判断是否为ERP全景图，是的话调用生成深度图服务
@@ -330,7 +328,6 @@ public class ResourceServiceImpl implements ResourceService {
             strBuffer.append(configFile.substring(endPos + 13));
 
             storageService.store(strBuffer.toString(), prefix);
-            cosStorageService.store(strBuffer.toString(), prefix);
         } catch (Exception ex) {
 
             System.out.println(ex.getMessage());

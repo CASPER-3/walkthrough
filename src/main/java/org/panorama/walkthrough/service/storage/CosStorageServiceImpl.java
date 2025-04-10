@@ -92,6 +92,8 @@ public class CosStorageServiceImpl implements StorageService {
 
     }
 
+    //根据userid和projectId和文件名获取资源文件流
+    //prefix包括包括userId和projectId
     @Override
     public InputStream getSource(String prefix, String simpleSourceName) throws Exception {
         String storageKey = "panoramas/" + prefix + simpleSourceName;
@@ -114,9 +116,21 @@ public class CosStorageServiceImpl implements StorageService {
 
     }
 
+    //读取全景漫游配置文件
     @Override
     public byte[] readJsonFile(String path) {
-        return new byte[0];
+        String storageKey = "panoramas/" + path;
+        byte[] jsonFile = new byte[]{};
+        try {
+            //获取对象
+            COSObject cosObject = cosClient.getObject(bucketName, storageKey);
+            InputStream inputStream = cosObject.getObjectContent();
+
+            jsonFile = inputStream.readAllBytes();
+        } catch (IOException e) {
+            log.error("Read Configuration Json File Failed Path:" + path);
+        }
+        return jsonFile;
     }
 
     @Override
