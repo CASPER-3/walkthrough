@@ -7,6 +7,7 @@ import org.panorama.walkthrough.service.storage.StorageService;
 import org.panorama.walkthrough.util.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,7 +39,7 @@ public class ProjectManager {
     ProjectService projectService;
     StorageService storageService;
 
-    public ProjectManager(ProjectService projectService, StorageService storageService) {
+    public ProjectManager(ProjectService projectService, @Qualifier("cosStorageServiceImpl") StorageService storageService) {
         this.projectService = projectService;
         this.storageService = storageService;
     }
@@ -108,10 +110,16 @@ public class ProjectManager {
                                 @PathVariable(name = "configFileId") String configFileId,
                                 @PathVariable(name = "sourceName") String sourceName) {
         String prefix = userId + "/" + configFileId + "/";
-        byte[] bytes;
+
         try (InputStream inputStream = storageService.getSource(prefix, sourceName)) {
-            bytes = new byte[inputStream.available()];
-            inputStream.read(bytes, 0, inputStream.available());
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            byte[] temp = new byte[8192];
+            int nRead;
+            while ((nRead = inputStream.read(temp, 0, temp.length)) != -1) {
+                buffer.write(temp, 0, nRead);
+            }
+            byte[] bytes = buffer.toByteArray();
+
             log.info("Request\t[Get]/project/getEditSources\tSuccessful\t" + prefix + sourceName);
             return bytes;
         } catch (Exception e) {
@@ -132,6 +140,7 @@ public class ProjectManager {
     /**
      * Mapping for Point Cloud Editor
      * Wed,Oct25,2023
+     *
      * @param projectId
      * @param request
      * @return
