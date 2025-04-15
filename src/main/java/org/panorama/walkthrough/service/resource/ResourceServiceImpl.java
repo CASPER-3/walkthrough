@@ -6,13 +6,13 @@ import com.alibaba.fastjson2.JSONObject;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.panorama.walkthrough.grpc.GrpcClient;
+import org.panorama.walkthrough.model.DepthEstimateMessage;
 import org.panorama.walkthrough.model.Project;
 import org.panorama.walkthrough.repositories.ProjectRepository;
 import org.panorama.walkthrough.service.algorithm.DepthEstimateService;
 import org.panorama.walkthrough.service.algorithm.Dust3rService;
 import org.panorama.walkthrough.service.algorithm.Equirectangular2CubeService;
 import org.panorama.walkthrough.service.algorithm.ThumbGenerateService;
-import org.panorama.walkthrough.service.storage.CosStorageServiceImpl;
 import org.panorama.walkthrough.service.storage.StorageService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -75,8 +75,8 @@ public class ResourceServiceImpl implements ResourceService {
             String imageName = picId + suffix;
 
             try {
-
-                depthEstimateService.depthEstimate(file);
+                DepthEstimateMessage depthEstimateMessage = new DepthEstimateMessage(userId, projectId, imageName);
+                depthEstimateService.depthEstimate(depthEstimateMessage);
                 equirectangular2CubeService.equirectangular2Cube(prefix, imageName);
                 int currentValue = counter.incrementAndGet();
                 if (currentValue >= 2) {
@@ -376,12 +376,12 @@ public class ResourceServiceImpl implements ResourceService {
         String fullRootDir = pathPrefix + rootDir + "dust3rInput/";
         log.info("Dust3r service\tProjectId:" + projectId);
 
-        try{
+        try {
             String res = grpcClient.compute(fullRootDir);
             return true;
 
-        }catch(Exception ex){
-            log.warn("grpc called failed:"+ex.getMessage());
+        } catch (Exception ex) {
+            log.warn("grpc called failed:" + ex.getMessage());
 
         }
 

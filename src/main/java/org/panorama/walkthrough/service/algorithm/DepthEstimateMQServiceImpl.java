@@ -1,10 +1,10 @@
 package org.panorama.walkthrough.service.algorithm;
 
+import org.panorama.walkthrough.model.DepthEstimateMessage;
 import org.panorama.walkthrough.service.mq.RabbitMqPublisherService;
 
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
@@ -32,9 +32,9 @@ public class DepthEstimateMQServiceImpl extends DepthEstimateService {
     }
 
     @Override
-    Boolean doDepthEstimate(MultipartFile file) throws IOException {
+    Boolean doDepthEstimate(DepthEstimateMessage depthEstimateMessage) throws IOException {
         try {
-            rabbitMqPublisherService.publishImage(file);
+            rabbitMqPublisherService.publishDepthEstimateMessage(depthEstimateMessage);
         } catch (Exception e) {
             return false;
         }

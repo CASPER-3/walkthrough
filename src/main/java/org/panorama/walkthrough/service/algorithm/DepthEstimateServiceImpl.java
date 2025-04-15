@@ -1,5 +1,6 @@
 package org.panorama.walkthrough.service.algorithm;
 
+import org.panorama.walkthrough.model.DepthEstimateMessage;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -60,9 +61,10 @@ public class DepthEstimateServiceImpl extends DepthEstimateService {
     }
 
     @Override
-    Boolean doDepthEstimate(MultipartFile file) throws IOException {
+    Boolean doDepthEstimate(DepthEstimateMessage depthEstimateMessage) throws IOException {
         return null;
     }
+
 
     private static String getCommand(String imageDir, String imageName) {
         String pathPrefix = "../../../../../../userData/projectResources/";

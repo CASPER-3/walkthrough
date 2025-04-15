@@ -1,5 +1,6 @@
 package org.panorama.walkthrough.service.algorithm;
 
+import org.panorama.walkthrough.model.DepthEstimateMessage;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
@@ -22,13 +23,13 @@ public abstract class DepthEstimateService {
 
     }
 
-    public Boolean depthEstimate(MultipartFile file) throws IOException {
-        return doDepthEstimate(file);
+    public Boolean depthEstimate(DepthEstimateMessage depthEstimateMessage) throws IOException {
+        return doDepthEstimate(depthEstimateMessage);
     }
 
     abstract Boolean doDepthEstimate(String imageDir,String imgName);
 
-    abstract Boolean doDepthEstimate(MultipartFile file) throws IOException;
+    abstract Boolean doDepthEstimate(DepthEstimateMessage depthEstimateMessage) throws IOException;
 
 
 }
