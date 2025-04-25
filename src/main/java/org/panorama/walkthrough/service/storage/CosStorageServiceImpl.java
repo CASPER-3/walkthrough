@@ -115,6 +115,15 @@ public class CosStorageServiceImpl implements StorageService {
 
     @Override
     public void delete(String path) {
+        String storageKey = "panoramas/" + path;
+        try{
+            cosClient.deleteObject(bucketName, storageKey);
+            log.info("Resource Deleted Success:" + path);
+        }catch (CosServiceException e){
+            throw new StorageException("Failed to delete object from COS(Service Exception)" + e.getMessage(), e);
+        }catch (CosClientException e){
+            throw new StorageException("Failed to delete object from COS(Client Exception)" + e.getMessage(), e);
+        }
 
     }
 
